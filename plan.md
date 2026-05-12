@@ -311,6 +311,34 @@ Default rules:
 
 ## UX Requirements
 
+### Design References
+
+Comparable apps and surfaces to study:
+
+| Reference | Why it matters | Ideas to borrow |
+| --- | --- | --- |
+| [Channels: Whole Home DVR](https://apps.apple.com/us/app/channels-whole-home-dvr/id1405359767) | Closest conceptual match: live TV, Apple TV, guide data, favorites, DVR mental model. | Simple live-TV navigation, guide-first browsing, favorites, resume/continue patterns, family-friendly channel switching. |
+| [IPTVX](https://apps.apple.com/us/app/iptvx/id1451470024) | Polished iOS/tvOS IPTV app with EPG grid, live zapping, on-player EPG, favorites, iCloud sync, and EPG search. | Fast live-channel switching, on-player metadata, favorites, search across program metadata, background catalogue refresh. |
+| [iPlayTV](https://apps.apple.com/us/app/iplaytv-iptv-m3u-player/id1072226801) | Apple TV-only IPTV player focused on playlists, EPG, channel preview, favorites, frame-rate matching, and audio/subtitle tracks. | tvOS-first simplicity, channel preview, remote-friendly live-channel UX, audio/subtitle handling. |
+| [TivEPG](https://tivepg.com/) | IPTV app presenting a Sky Glass-style horizontal EPG and Siri Remote-first navigation. | Horizontal timeline guide, category filters, rich now/next metadata, quick jumps from guide to playback. |
+| [SWIPTV](https://apps.apple.com/us/app/swiptv-iptv-player/id1658538188) | Modern multi-device IPTV player with live EPG, previews, playlist refresh, multi-player, PiP, and metadata enhancements. | Fast refresh, instant previews, cross-device continuity, secondary player modes. |
+| [HBO Max](https://www.macrumors.com/2025/12/04/apple-announces-2025-app-store-awards/) | Apple TV App of the Year in the 2025 App Store Awards. | Accessibility polish, large-screen navigation, high-quality content detail surfaces. |
+| [tvOS 26 design direction](https://images.apple.com/uk/newsroom/2025/06/apple-tv-brings-a-beautiful-redesign-and-enhanced-home-entertainment-experience/) | Apple emphasizes keeping focus on what is playing with unobtrusive system UI. | Lightweight overlays, video-first layout, large readable type, restrained chrome. |
+| Native Apple video player conventions | Recent criticism of custom Apple TV players shows users value platform affordances. | Prefer AVPlayer-native behavior where possible: remote scrubbing, captions, audio options, system accessibility, predictable playback controls. |
+
+Design principles for this app:
+
+- Full-screen video is the primary surface; metadata is an overlay.
+- Channel up/down is more important than search in the first version.
+- The app should feel like a calm public-service TV tuner, not a streaming-content storefront.
+- Local priority channels should be pinned first: Quebec, Ontario, CPAC.
+- Direct HLS channels should feel instant and native.
+- Link-out, YouTube, and official-player-only channels should be visibly different from native channels.
+- The guide should start as a horizontal now/next rail, not a dense cable-grid EPG.
+- Off-air states should feel intentional: show next sitting or source status instead of an indefinite spinner.
+- Source-quality labels should be visible but quiet: `Official HLS`, `Official vendor`, `Official YouTube`, `Link out`, `Schedule only`.
+- Avoid decorative cards around video; the player is the canvas.
+
 Channel card should show:
 
 ```text

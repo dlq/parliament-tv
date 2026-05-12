@@ -810,6 +810,35 @@ Pass criteria:
 - Off-air streams show a clear state instead of looking broken.
 - Every channel displays source owner, terms status, and official-source link.
 
+### Comparable app and UI references
+
+This app should borrow from live-TV and IPTV apps more than from generic streaming catalogues.
+
+Closest direct references:
+
+- [Channels: Whole Home DVR](https://apps.apple.com/us/app/channels-whole-home-dvr/id1405359767): live TV, Apple TV, guide data, DVR, favorites, and cross-device viewing. Strong reference for a simple, family-friendly live-TV mental model.
+- [IPTVX](https://apps.apple.com/us/app/iptvx/id1451470024): iOS/tvOS IPTV app with EPG grid, live zapping, on-player EPG, favorites, iCloud sync, and EPG search. Strong reference for polished playlist/channel management and on-player metadata.
+- [iPlayTV](https://apps.apple.com/us/app/iplaytv-iptv-m3u-player/id1072226801): Apple TV-only IPTV player with EPG, channel preview, favorites, frame-rate matching, audio tracks, and subtitles. Strong reference for tvOS-first simplicity.
+- [TivEPG](https://tivepg.com/): iOS/tvOS IPTV app that describes a Sky Glass-style horizontal EPG and Siri Remote-first experience. Useful reference for now/next timeline browsing.
+- [SWIPTV](https://apps.apple.com/us/app/swiptv-iptv-player/id1658538188): modern IPTV player with live EPG, previews, multi-device support, playlist refresh, PiP, and metadata enhancements. Useful reference for current IPTV feature expectations.
+
+Polished large-screen references:
+
+- [HBO Max](https://www.macrumors.com/2025/12/04/apple-announces-2025-app-store-awards/) won Apple TV App of the Year in the 2025 App Store Awards. Study accessibility, large-screen navigation, and content-detail polish rather than its catalogue/storefront model.
+- Apple's [tvOS 26 design direction](https://images.apple.com/uk/newsroom/2025/06/apple-tv-brings-a-beautiful-redesign-and-enhanced-home-entertainment-experience/) emphasizes keeping focus on what is playing with unobtrusive UI. That fits this app better than card-heavy browsing.
+- Netflix's Apple TV custom-player changes drew criticism because they removed familiar native tvOS affordances. The lesson is to stay close to AVPlayer/native tvOS playback behavior where possible.
+
+UI ideas to steal:
+
+- Full-screen video first, metadata overlays second.
+- Remote-first channel up/down.
+- A horizontal now/next rail instead of a dense EPG grid for MVP.
+- On-player mini guide: current channel, current event, next event, source, language/captions.
+- Favorites/local priority pinning for Quebec, Ontario, and CPAC.
+- Visible but restrained source-quality badges: `Official HLS`, `Official vendor`, `Official YouTube`, `Link out`, `Schedule only`.
+- Intentional off-air states: `Off air`, `Next sitting at 10:00`, `Schedule unavailable`, or `Signal available, program unknown`.
+- Avoid hiding source trust. First-party parliament video, official broadcaster feeds, official YouTube, and third-party relays should look distinct.
+
 Use a channel model like:
 
 ```text
