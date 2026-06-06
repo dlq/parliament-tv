@@ -11,7 +11,11 @@ import SwiftUI
 struct ParliamentsApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+                ContentView()
+            } else {
+                Color.clear
+            }
         }
     }
 }
