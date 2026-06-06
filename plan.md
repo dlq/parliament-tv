@@ -326,6 +326,33 @@ Comparable apps and surfaces to study:
 | [tvOS 26 design direction](https://images.apple.com/uk/newsroom/2025/06/apple-tv-brings-a-beautiful-redesign-and-enhanced-home-entertainment-experience/) | Apple emphasizes keeping focus on what is playing with unobtrusive system UI. | Lightweight overlays, video-first layout, large readable type, restrained chrome. |
 | Native Apple video player conventions | Recent criticism of custom Apple TV players shows users value platform affordances. | Prefer AVPlayer-native behavior where possible: remote scrubbing, captions, audio options, system accessibility, predictable playback controls. |
 
+Secondary streaming comparables:
+
+These are polish and interaction references, not the core product category. The app should borrow restraint, accessibility, trust cues, and live-event affordances from them, but avoid becoming a catalogue storefront.
+
+| Reference | Why it matters | Ideas to borrow | Avoid |
+| --- | --- | --- | --- |
+| Apple TV app / Apple TV+ | Best native Apple-platform reference for system-integrated video, sports/live surfaces, and restrained playback chrome. | Elegant overlays, source aggregation, resume-last-context, multiview as a later live-event pattern, native accessibility expectations. | Storefront merchandising and promotional rows. |
+| Netflix | Strong large-screen focus behavior, confident typography, and fast browsing mechanics. | Fast focus movement, readable TV-distance type, minimal controls while watching, strong selected-item clarity. | Autoplay preview culture and catalogue-density as the app's home model. |
+| Crave / Max | Useful for premium large-screen hierarchy and content-detail polish. | Clean detail surfaces, captions/audio affordances, episode/event metadata presentation. | Entertainment-catalogue mental model and marketing-heavy rails. |
+| CBC Gem | Closest public-service streamer tone among general services. | Institutional trust cues, live/event programming presentation, public broadcaster clarity, bilingual/accessibility expectations. | Generic streaming homepage structure. |
+| YouTube TV | Strong live-TV reference with guide, live tab, customized channel order, and multiview. | Live guide behavior, channel pinning/custom ordering, live badges, multiview as a future committee/plenary monitoring mode. | Account/personalization complexity and recommendation-first home. |
+| Fubo | Sports-first live-TV app with guide and progress context for jumping into live programming. | "What is on now / what is next / how far through is it" cues, quick live switching, persistent guide state. | Sports-betting or entertainment packaging. |
+| Peacock / ESPN | Live-event streamers with many simultaneous event feeds. | Event collections, live-event hubs, multiview or synchronized second-screen ideas for busy sitting days. | Making multiview part of the MVP before single-stream surfing is excellent. |
+| Pluto TV / Tubi live / Plex live TV | FAST-style linear streaming references. | Simple channel categories, quick channel-guide browsing, low-friction lean-back playback. | Ad-supported clutter, infinite low-value channels, and weak source provenance. |
+| PBS / Kanopy | Public-interest and institutional-content references. | Calm tone, clear programme descriptions, accessibility, educational/public-good framing. | Library/catalogue browsing as the primary interaction. |
+
+FAST/live-guide ideas to apply:
+
+- Open directly into playback or the last-used guide position. FAST apps work because the user is never far from something playing.
+- Use simple guide categories, not deep taxonomy: `Pinned`, `Local`, `National`, `International`, `Committees`, `Event-based`, `Link-out`.
+- Preserve stable channel order and optionally show short channel numbers or codes. Parliament streams are often room/feed based, so stable positions reduce cognitive load.
+- Let users hide noisy or inactive channels later; the first version can approximate this with pinned/local groups.
+- Treat missing guide data as normal. Show `Schedule unavailable` or `Signal available, program unknown` instead of breaking the guide.
+- Keep a visible official-source/provenance cue. FAST apps often blur source quality; this app should do the opposite.
+- Avoid infinite channel count. A parliamentary surfer should feel curated and reliable, not like an endless free-TV catalogue.
+- Consider a future `Monitoring` mode inspired by live-event/multiview apps for days with many simultaneous committees, but only after single-stream surfing and metadata are stable.
+
 Design principles for this app:
 
 - Full-screen video is the primary surface; metadata is an overlay.
@@ -338,6 +365,27 @@ Design principles for this app:
 - Off-air states should feel intentional: show next sitting or source status instead of an indefinite spinner.
 - Source-quality labels should be visible but quiet: `Official HLS`, `Official vendor`, `Official YouTube`, `Link out`, `Schedule only`.
 - Avoid decorative cards around video; the player is the canvas.
+- Borrow polish from general streamers, but keep the start state as live playback or the guide, not a promotional home page.
+- Metadata should answer: what am I watching, is it live, what is next, and can I trust this source?
+- Public-service streamers are more relevant tonally than entertainment streamers because this app needs credibility more than excitement.
+
+Prototype lessons from the first SwiftUI pass:
+
+- The app's core "surfability" is proven when direct HLS channels play full-screen and channel changes work from the remote/keyboard.
+- Chrome must get out of the way quickly; overlays should be temporary, translucent, and small enough not to compete with the video.
+- Changing channel should resume playback automatically. The user should not have to press Play/Space after every channel change.
+- tvOS focus styling needs to be owned by the app for the guide rail. Avoid default oversized focus underlays fighting the selected-channel highlight.
+- Bottom guide cards need fixed text regions, truncation, and clipping so long legislature/channel names never resize or overflow the rail.
+- A flat list of 20+ streams is already too much. The next UI pass should group or pin channels instead of only restyling the current rail.
+
+Next UI pass:
+
+- Add guide groups: `Pinned`, `Quebec`, `Ontario`, `World`, and later `Link-out`.
+- Keep local-priority pinned channels first: Quebec active channels, Ontario House, CPAC.
+- Make native HLS channels the main surf rail; keep UK Parliament, European Parliament, Australia Parliament, and other official-player/YouTube sources in a separate source-detail/link-out surface until native Apple playback is validated.
+- Evolve the bottom rail toward a now/next timeline, but do not build a dense cable-grid EPG for the MVP.
+- Add a compact on-player mini guide with current channel, now/next metadata, source quality, language/captions, and official source.
+- Use clearer live-state labels: `Live`, `Off air`, `Next sitting`, `Schedule unavailable`, and `Signal available, program unknown`.
 
 Channel card should show:
 
@@ -368,7 +416,8 @@ Channel surfing behavior:
 - Next/previous channel controls.
 - Keyboard shortcuts.
 - Preserve mute/volume where browser policy permits.
-- Graceful transition between HLS, YouTube, iframe, and link-out channels.
+- Preserve play intent across channel changes so switching channels does not leave the new channel paused.
+- Graceful transition between native HLS channels, with explicit source-detail/link-out handling for YouTube, iframe, and official-player-only channels.
 
 ## Implementation Phases
 
@@ -384,6 +433,9 @@ Channel surfing behavior:
 - Build minimal SwiftUI/tvOS player view.
 - Add AVPlayer playback for direct HLS.
 - Add channel rail and remote next/previous.
+- Auto-resume playback on channel changes.
+- Prevent tvOS focus underlay conflicts in the channel rail.
+- Ensure channel-card text cannot overflow at TV and phone sizes.
 - Add official link-out/source-detail mode.
 - Test spike channel set on tvOS simulator/device and iOS simulator.
 
@@ -401,10 +453,13 @@ Channel surfing behavior:
 ### Phase 4: MVP UI
 
 - tvOS channel rail.
+- Channel groups and pinned local-priority channels.
 - Full-screen player.
 - Now/next overlay.
+- Compact on-player mini guide.
 - Source details overlay.
 - Error/off-air/upcoming states.
+- Separate non-native sources from the main surf rail until playback is validated.
 
 ### Phase 5: Hardening
 
@@ -414,6 +469,18 @@ Channel surfing behavior:
 - Captions/audio language discovery.
 - Terms review pass.
 - Add stretch channels.
+
+### Phase 5b: Curated second ring
+
+Do not open a broad sub-national catalogue yet. After the Apple-first MVP is stable, add a curated second ring:
+
+- Canada expansion: BC and Nunavut after Quebec/Ontario.
+- UK devolved parliaments: Scotland, Wales/Senedd, and Northern Ireland as official-player/schedule cards.
+- Australia states: NSW, Queensland, WA, and Victoria as official-player/schedule cards.
+- Germany pilot: Baden-Wurttemberg and NRW for possible direct HLS extraction.
+- Supra-national: PACE and Nordic Council as event-based official-player cards.
+
+Only direct HLS or AVPlayer-compatible streams should enter the main channel rail. Official-player-only sub-national and supra-national bodies should stay metadata/link-out cards until an Apple-compatible playback path is validated.
 
 ### Phase 6: Openness and standards advocacy
 
