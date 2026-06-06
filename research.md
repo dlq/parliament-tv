@@ -690,6 +690,59 @@ The app should not just show a static list of streams. It needs live-state and s
 | New Zealand Parliament | Help page says PTV broadcasts live during House sittings and points users to the Parliament Calendar for dates/times. Source: `https://www.parliament.nz/en/footer/website-help/the-parliament-tv-help-page/` | Pair direct HLS with sitting calendar to avoid showing a dead or uninteresting channel. |
 | UK/EP/YouTube fallbacks | Official pages often know upcoming event state better than raw players. | The channel model needs `schedule_url`, `schedule_source_type`, and `current_event` separate from `playback_url`. |
 
+### Schedule metadata discovery pass
+
+Date of pass: 2026-06-06.
+
+Goal: estimate how much "EPG-like" information the app can reasonably get from official sources, without assuming every source has a cable-TV-style programme guide.
+
+Conclusion: a focused MVP can have useful now/next or daily schedule metadata. A universal EPG is unrealistic, but an "EPG-lite" layer is feasible for the strongest official sources. The schedule layer should be source-specific adapters rather than one generic parser.
+
+| Source | Official schedule surface | Format observed | Metadata available | Confidence | Adapter difficulty | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| CPAC | `https://www.cpac.ca/schedule/` | Server-rendered HTML | Daily TV-style schedule, UTC `data-airdate`, title, description, timezone controls. | High | Low-medium | Strongest TV-like schedule. Need classify whether current show is parliamentary, committee, public record, or rebroadcast. |
+| Assemblee nationale du Quebec | `https://www.assnat.qc.ca/fr/video-audio/index.html`; JSON methods under `/Gabarits/RefonteVA_Accueil.aspx/ObtenirListeEnDirect` and `/ObtenirListeAVenir` | Official JSON responses | Current live webdiffusions and upcoming webdiffusions with date, time range, committee/chamber labels, and titles. | High | Medium | Very good local source. Needs French time parsing and mapping events to the correct `canalNN` stream. On a non-sitting Saturday, live list returned empty and upcoming list returned multiple June 8-10, 2026 events. |
+| Legislative Assembly of Ontario | `https://www.ola.org/en/legislative-business/calendar` | Drupal server-rendered calendar HTML with day/week/month navigation and AJAX view plumbing | House and committee events by day, plus watch/live context from official watch pages. | Medium-high | Medium | Curl needs a browser user-agent. Good MVP source, but stream-to-room mapping still needs testing on sitting days. |
+| UK Parliament / Parliamentlive.tv | `https://www.parliamentlive.tv/Guide`, `/Guide/EpgDay?date=...`, `/Guide/EpgInfo/<eventId>`, `http://data.parliamentlive.tv/api/event/feed` | HTML guide partials, event pages, Atom feed | Channel lanes, event IDs, rooms, chamber/committee labels, day schedule, event details, agenda items, start/end times on event pages. | High | Medium | Best true EPG-like source found. Playback remains official-player/YouTube-first, but metadata is strong enough for a channel guide. |
+| European Parliament | `https://multimedia.europarl.europa.eu/en/webstreaming` | Next.js SSR plus API config for `api.multimedia.europarl.europa.eu` and `/o/epmp-frontend-rest/v1.0` | Streaming agenda for plenaries, committees, press conferences, and events. | High-promise | Medium-high | Strong schedule target. Exact REST endpoint still needs extraction from Next.js chunks or network inspection. Watchity player config is visible in page data. |
+| New Zealand Parliament | `https://www3.parliament.nz/en/calendar/`; `https://www3.parliament.nz/en/pb/meetings-of-parliament/` | Official calendar HTML, RSS/export links, House sitting programme export | Current "House next meets" state, day/week/month calendar, committee events, House Business filters, sitting programme export, normal sitting hours. | High | Medium | Good partner for direct Parliament TV HLS. Calendar says next meeting and exposes event rows; urgency/extended hours can change late and must be refreshed. |
+| Brazil TV Camara | `https://www.camara.leg.br/tv/programacao-semanal` | Static weekly HTML tables | Weekly programme schedule with time/program rows and explicit `AO VIVO` labels. | High | Low | Strong lawful/technical candidate if attribution and terms are respected. Easy EPG-lite adapter. |
+| Portugal Assembleia da Republica | `https://agenda.parlamento.pt/` | Official agenda app with AJAX handlers and export options | Structured agenda by section, XML/JSON/PDF export options, ICS-style content download path. | High-promise | Medium | Requires session/XSRF handling for structured export. Good later adapter because the source is explicitly agenda-oriented. |
+| Spain Congreso | `https://www.congreso.es/en/programacion` | Liferay portlet HTML | Canal Parlamento weekly programming pages and date-driven schedule URLs. | Medium-high | Medium | Scrapeable, but Liferay portlet shape adds mechanical complexity. |
+| France Assemblee nationale | `https://www.assemblee-nationale.fr/seance/` | Official HTML agenda pages plus PDF agenda documents | Order of business, commission agendas, future scheduling PDFs. | Medium | Medium-high | Good official metadata exists, but less channel-like. Direct page is video-first; schedule likely needs agenda/PDF parsing. |
+| Netherlands Tweede Kamer | `https://www.tweedekamer.nl/contact-en-bezoek/volg-de-tweede-kamer-online`, linked plenary/committee agenda pages, Debat Direct | Official pages and app/site links | Official live/replay and debate agenda surfaces are clearly linked. | Medium-promise | Medium-high | Needs a follow-up pass against plenary/committee pages and Debat Direct to identify structured endpoints. |
+| Denmark Folketinget | Official TV/schedule pages | Not fetched successfully in this environment | Likely official plenary/meeting schedule. | Unknown | Unknown | Official site returned 403 to curl, even with a browser user-agent. Needs browser/manual pass before classification. |
+| Australia APH | `https://www.aph.gov.au/News_and_Events/Watch_Read_Listen` and APH calendar/watch surfaces | Not fetched successfully in this environment | Likely calendar plus official watch surfaces; YouTube scheduled streams may help. | Medium-promise | Medium-high | Official APH pages returned 403 to curl. Needs browser/manual pass and/or YouTube scheduled-live investigation. |
+| YouTube-backed sources | Official YouTube channel live pages and scheduled events | YouTube web/API surfaces | Current live state, scheduled live events, titles, thumbnails, channel identity when API access is available. | Medium | Medium-high | Useful fallback, but not a stable EPG. Avoid extracted manifests; use official embed/player semantics. |
+
+Practical metadata tiers for the MVP:
+
+| Tier | Sources | App behavior |
+| --- | --- | --- |
+| Strong now/next and daily schedule | CPAC, Quebec, UK Parliamentlive, New Zealand, Brazil TV Camara | Show now/next overlay, upcoming rail, off-air/upcoming states, and refresh on a timer. |
+| Good but needs endpoint extraction | European Parliament, Portugal, Spain, Ontario | Include behind feature flags or adapter spikes; promote once parsing survives a sitting-day test. |
+| Official but less channel-like | France, Netherlands, Australia, Denmark | Keep as source-detail cards or link-out/official-player entries until structured metadata and playback behavior are validated. |
+| Weak/no schedule | Raw HLS feeds with no official calendar mapping | Show signal state only: online/offline, last validated time, and source page link. |
+
+Recommended adapter order:
+
+1. CPAC schedule adapter.
+2. Quebec webdiffusion live/upcoming adapter.
+3. UK Parliamentlive guide adapter.
+4. New Zealand calendar/sitting adapter.
+5. Ontario calendar adapter.
+6. Brazil TV Camara weekly schedule adapter.
+7. European Parliament webstreaming adapter after extracting exact REST calls.
+8. Portugal and Spain agenda/programming adapters.
+
+Implementation notes:
+
+- Store schedules independently from playback URLs. Some of the best schedules belong to sources whose playback path is official-player or YouTube rather than direct HLS.
+- Normalize all events to source timezone plus UTC start/end. Display in the user's locale but keep source-local times available because parliamentary schedules are often published that way.
+- Add confidence and freshness fields. A Saturday "no live event" result is valid, not a stream failure.
+- Expect late changes. Parliamentary schedules move, sit under urgency, or add extended hours; adapters should refresh more aggressively near sitting times.
+- Keep a manual override path for MVP launch. A small curated channel lineup can tolerate hand-corrected channel-to-room mappings while parser confidence improves.
+
 ### YouTube channel-surfing model
 
 YouTube is viable, but it is not the same as HLS channel surfing.
@@ -877,3 +930,132 @@ Recommended minimum viable channel list:
 - Determine whether Parliamentlive.tv/Red Bee and European Parliament/Watchity permit embedding outside their own pages or whether only deep-linking is appropriate.
 - Build a stream validator that periodically checks HTTP status, CORS headers, playlist shape, and browser playback success.
 - Review terms of use for each source before redistributing direct stream URLs in a public app.
+
+## Non-US sub-national and additional supra-national discovery pass
+
+Date of pass: 2026-06-06.
+
+Scope: a bounded discovery pass for sub-national legislative streams outside U.S. states, plus a light pass over additional supra-national parliamentary bodies. This is intentionally not a comprehensive global sub-national crawl.
+
+Method:
+
+- Re-fetched the current `iptv-org` legislative playlist.
+- Excluded U.S. state/municipal-style entries.
+- Searched for non-U.S. sub-national legislative names and obvious terms: province, territory, Landtag, autonomous parliament, devolved parliament, live stream, webcast, plenary.
+- Validated direct HLS entries where the playlist exposed a manifest.
+- Used official-source web searches for Canada, Australia, UK devolved parliaments, German Landtage, Spanish autonomous parliaments, and supra-national parliamentary assemblies.
+
+Current `iptv-org` signal:
+
+- The current legislative playlist has 181 entries.
+- Non-U.S. sub-national direct candidates found in the playlist are concentrated in Canada, Spain, and Mexico.
+- Outside `iptv-org`, many sub-national legislatures have official live/archived webcasts and calendars, but not obvious stable raw HLS.
+- Primary raw-stream source checked: https://iptv-org.github.io/iptv/categories/legislative.m3u
+
+### Direct sub-national HLS candidates found
+
+| Jurisdiction | Legislature/channel | Validation | Notes |
+| --- | --- | --- | --- |
+| Quebec, Canada | Assemblee nationale du Quebec, canal01-canal14 | Previously validated HTTP 200 for all 14 Wowza HLS channels. | Strong local-priority exception; official live-list API gives active channel/event metadata. |
+| Ontario, Canada | Legislative Assembly of Ontario / Ontario Parliamentary Network | Validated HTTP 200 for official iSi HLS. | Strong local-priority exception; 6 known iSi HLS channels. |
+| Nunavut, Canada | Legislative Assembly TV Nunavut | HTTP 200 HLS via `temp2.isilive.ca`. | Useful Canadian territorial candidate. Needs official page/terms confirmation before app inclusion. |
+| British Columbia, Canada | Legislative Assembly of BC House and Committee A | Current `iptv-org` HLS candidates timed out during validation. | Official page confirms live webcasts, YouTube availability, weekly broadcast schedule, parliamentary calendar, committee calendar, captions, ASL streams, and archives. Strong official fallback even though direct HLS did not validate in this pass. |
+| Jalisco, Mexico | Canal Parlamento del Congreso de Jalisco | HTTP 200 HLS. | Direct HLS candidate from `iptv-org`; not a priority for Apple-first MVP, but proof that non-U.S. sub-national direct HLS exists outside Canada. |
+| Colima, Mexico | ICRTV Colima | HTTP 200 HLS. | Legislative-adjacent/regional channel candidate from `iptv-org`; source quality needs review. |
+| Valencia, Spain | Corts Valencianes | Candidate timed out. | Official site prominently says live parliamentary activity can be followed and has agenda/calendar pages. `iptv-org` HLS did not validate in this pass. |
+| Andalucia, Spain | Parlamento de Andalucia | Candidate failed connection. | `iptv-org` raw IP/port candidate did not connect. Treat as official-page search target, not a direct candidate yet. |
+
+### High-yield official fallback targets
+
+These should be treated as official page/player/calendar candidates first. Direct HLS should only be added if extracted and validated later.
+
+| Country/system | Jurisdictions worth checking | Evidence from this pass | App implication |
+| --- | --- | --- | --- |
+| Canada | BC, Alberta, Saskatchewan, Manitoba, Nunavut, plus existing Quebec/Ontario. | BC official page confirms House/committee live webcasts, YouTube, schedules, calendars, captions, ASL, and archives. Alberta streams live proceedings and committees on its website plus YouTube/X/Facebook. Saskatchewan provides live video stream, committee streams, captions, archives, and sitting calendar. Manitoba has an official House Broadcasts page with sitting-hour availability and iframe. | Canada is the best sub-national expansion path. Add BC/Nunavut first after Quebec/Ontario if terms/playback check out. |
+| Australia | NSW, Victoria, Queensland, Western Australia, and likely other states/territories. | NSW has official chamber webcast pages and copyright conditions. Victoria has a Watch page and live captioned proceedings. Queensland has live/archived chamber and committee broadcasts with detailed broadcast conditions. Western Australia has live Assembly/Council broadcast pages, calendar, captions, and strict use conditions. | Australia has strong official-player/calendar coverage, but terms are often restrictive. Good later expansion, not direct-HLS-first. |
+| United Kingdom devolved parliaments | Scotland, Wales/Senedd, Northern Ireland. | Scottish Parliament TV has live/archived chamber and committee meetings. Senedd TV provides live and archived Plenary/committee coverage. Northern Ireland Assembly TV exposes multiple scheduled live streams with language/accessibility variants. | Very strong official-player/schedule candidates. For tvOS, likely link-out or metadata-first unless direct Apple-playable streams are found. |
+| Germany | NRW, Baden-Wurttemberg, Bavaria, Berlin and other Landtage. | NRW official page says it livestreams plenary debates and hearings; pages expose HLS-style playlist paths. Baden-Wurttemberg has four live channels and an exposed HLS URL pattern in page text. Bavaria has official livestreams and YouTube for selected committee sessions, plus accessible streams and archives. | Germany is promising for official HLS extraction, but not for a quick full crawl. Prioritize Baden-Wurttemberg/NRW/Bavaria if expanding. |
+| Spain | Catalunya, Valencia, Andalucia, Basque Country, Galicia and other autonomous parliaments. | Catalunya official site has Canal Parlament and live broadcast sections. Valencia official site has Canal Corts, live activity language, agenda/calendar, and an `iptv-org` candidate that timed out. Andalucia has a failed raw HLS candidate. | Spain is promising but fragmented. Treat as a later regional cluster rather than MVP scope. |
+| Belgium | Regional/community parliaments. | Not deeply checked in this pass. Earlier national pass already showed Belgium needs official player/YouTube inspection. | Defer unless a specific Belgian regional parliament becomes important. |
+| Switzerland/Austria | Cantonal/Landtag streams. | Not deeply checked in this pass. Likely official webcasts exist, but breadth is high and channel value is low for MVP. | Defer. Too many entities for current payoff. |
+
+Representative official sources checked:
+
+- BC Legislative Assembly broadcasts and webcasts: https://www.leg.bc.ca/index.php/parliamentary-business/broadcasts-and-webcasts
+- Legislative Assembly of Alberta watch page: https://www.assembly.ab.ca/assembly-business/watch-the-assembly
+- Legislative Assembly of Saskatchewan watch page: https://www.legassembly.sk.ca/legislative-business/watch-legislative-proceedings/
+- Manitoba Legislative Assembly committees/broadcast references: https://www.manitoba.ca/legislature/committees/index.html
+- Scottish Parliament live/watch page: https://www.parliament.scot/news-and-parliament-tv.aspx
+- Senedd TV: https://www.senedd.tv/
+- Northern Ireland Assembly TV: https://niassembly.tv/
+
+### Additional supra-national discovery
+
+The supra-national opportunity is more manageable than sub-national, but most bodies are event/session-based rather than channel-like.
+
+| Entity | Signal | App implication |
+| --- | --- | --- |
+| European Parliament | Already a strong official schedule/player target through Multimedia Centre webstreaming. | Keep as the primary supra-national candidate. |
+| Parliamentary Assembly of the Council of Europe (PACE) | Council of Europe live webcast portal carries PACE plenary/session material and VOD. | Strong event-based official-player candidate. Add to supra-national watchlist. |
+| Nordic Council | Official Nordic co-operation site hosts live broadcasts/session pages with iframes; Riksdag also hosted Nordic Council plenary video. | Good annual/session-based candidate, especially for schedule cards rather than channel surfing. |
+| NATO Parliamentary Assembly | Official NATO PA pages expose live streaming online meetings/session pages; NATO also streams Secretary General remarks at PA sessions. | Event-based candidate. Not a core channel. |
+| OSCE Parliamentary Assembly | OSCE live page and PA meeting pages indicate plenary/live-streamed sessions. | Event-based candidate; likely official page/link-out. |
+
+Representative official supra-national sources checked:
+
+- European Parliament Multimedia Centre: https://multimedia.europarl.europa.eu/en
+- PACE live webcast portal: https://pace.coe.int/en/pages/live-web
+- Nordic Council / Nordic co-operation live and session pages: https://www.norden.org/en
+- NATO Parliamentary Assembly: https://www.nato-pa.int/
+- OSCE live portal: https://www.osce.org/live
+
+### Search strategy that works
+
+Use `iptv-org` first for raw direct candidates:
+
+```text
+https://iptv-org.github.io/iptv/categories/legislative.m3u
+```
+
+Then search official sites with patterns like:
+
+```text
+site:<official-domain> livestream parliament
+site:<official-domain> webcast legislature
+site:<official-domain> live broadcast chamber
+site:<official-domain> plenary live stream
+site:<official-domain> m3u8
+"<jurisdiction>" "legislative assembly" "live stream"
+"<jurisdiction>" parliament "webcast"
+"<jurisdiction>" parliament YouTube live
+```
+
+For German-speaking jurisdictions:
+
+```text
+site:<official-domain> Livestream Landtag
+site:<official-domain> Plenum Livestream
+site:<official-domain> Mediathek Landtag Live
+site:<official-domain> playlist.m3u8
+```
+
+For Spanish autonomous parliaments:
+
+```text
+site:<official-domain> directo parlamento
+site:<official-domain> retransmisión en directo pleno
+site:<official-domain> canal parlamento directo
+site:<official-domain> m3u8
+```
+
+### Recommendation
+
+Do not open a broad sub-national catalogue yet. A useful next step is a curated second ring:
+
+1. Canada expansion: BC and Nunavut, after Quebec/Ontario.
+2. UK devolved: Scotland, Wales/Senedd, Northern Ireland as official-player/schedule cards.
+3. Australia states: NSW, Queensland, WA, Victoria as official-player/schedule cards.
+4. Germany pilot: Baden-Wurttemberg and NRW for possible direct HLS extraction.
+5. Supra-national: PACE and Nordic Council as event-based official-player cards.
+
+For the Apple-first MVP, only direct HLS or AVPlayer-compatible streams should enter the main channel rail. Official-player-only sub-national/supra-national bodies should be metadata/link-out cards until an Apple-compatible playback path is validated.

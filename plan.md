@@ -389,12 +389,14 @@ Channel surfing behavior:
 
 ### Phase 3: Program metadata adapters
 
-- CPAC schedule adapter.
-- Quebec live-list adapter.
-- Ontario calendar adapter.
-- UK Parliamentlive Guide adapter.
-- European Parliament schedule adapter.
-- YouTube live/current adapter.
+- CPAC schedule adapter: daily TV-style schedule, now/next overlay, timezone handling.
+- Quebec webdiffusion adapter: current live list plus upcoming webdiffusions.
+- UK Parliamentlive Guide adapter: day guide, event details, room/chamber labels, agenda items.
+- New Zealand calendar adapter: House next-meeting state, sitting programme, calendar rows.
+- Ontario calendar adapter: House/committee calendar and stream-room mapping.
+- Brazil TV Camara weekly schedule adapter: time/program rows and `AO VIVO` labels.
+- European Parliament webstreaming adapter: extract official Multimedia Centre REST calls before implementation.
+- YouTube live/current adapter for official YouTube fallbacks.
 
 ### Phase 4: MVP UI
 
@@ -412,6 +414,37 @@ Channel surfing behavior:
 - Captions/audio language discovery.
 - Terms review pass.
 - Add stretch channels.
+
+### Phase 6: Openness and standards advocacy
+
+After the app is stable enough to demonstrate the channel-surfing model, use it as evidence for a light advocacy effort with lagging legislatures and broadcast vendors.
+
+The advocacy goal is not to demand unrestricted rebroadcast rights. It is to encourage public parliamentary bodies to publish predictable, standards-based access points for live video, schedules, and accessibility metadata.
+
+Core message:
+
+- Public proceedings should be easy to access on phones, tablets, computers, TVs, and assistive devices.
+- Stable documented feeds reduce scraping, broken integrations, and accidental misuse.
+- Open technical access can still preserve attribution, watermarking, official source links, and clear terms.
+- Schedule and event metadata make proceedings easier to cite, discover, and understand.
+- Standard metadata improves accessibility by exposing captions, sign-language feeds, audio languages, room labels, committee labels, and upcoming proceedings.
+- Machine-readable feeds reduce support burden because civic technologists do not need to reverse-engineer fragile web players.
+
+Minimum standard to advocate for:
+
+- Stable official HLS stream or documented official embed for each chamber/committee stream.
+- JSON schedule endpoint with stable event IDs.
+- Now/next endpoint or live-state signal.
+- Source-local timezone and UTC start/end timestamps.
+- Chamber, room, committee, legislature, and jurisdiction labels.
+- Caption, sign-language, and audio-language metadata.
+- Plain-language terms of use for non-commercial public-access apps.
+- Browser and Apple-platform playback compatibility, including CORS where applicable.
+- Off-air/status signal so sitting-only streams are not misclassified as broken.
+
+Useful project artifact:
+
+- Publish a small benchmark matrix showing which legislatures provide direct HLS, official embeds, schedule APIs, now/next metadata, captions/accessibility metadata, terms clarity, and Apple-platform compatibility.
 
 ## Biggest Risks
 
