@@ -470,6 +470,16 @@ Before adding more channels, logos, or metadata adapters, clean up the prototype
 - European Parliament webstreaming adapter: extract official Multimedia Centre REST calls before implementation.
 - YouTube live/current adapter for official YouTube fallbacks.
 
+Near-term direct-HLS schedule-adapter order:
+
+1. Brazil TV Camara: easiest next schedule source; official weekly HTML tables include time/program rows and `AO VIVO` labels.
+2. New Zealand Parliament TV: pair the validated HLS feed with official calendar, sitting programme, and "House next meets" state.
+3. Ontario Legislative Assembly: high-value local source; map House/committee calendar events to `house-en`, `rm151-en`, `committee_1-en`, `committee_2-en`, and media streams during a sitting-day test.
+4. Spain Congreso / Canal Parlamento: official programming pages look scrapeable, but Liferay/portal HTML adds mechanical friction.
+5. Portugal ARTV: promising official agenda/export source, but likely needs session, XSRF, or structured-export handling before it is quick to implement.
+
+Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, Thailand, Slovakia, and Nunavut as later schedule follow-ups unless a clearly structured official endpoint is found. For those, continue showing signal state and official source links rather than pretending schedule coverage exists.
+
 ### Phase 4: MVP UI
 
 - tvOS channel rail.
