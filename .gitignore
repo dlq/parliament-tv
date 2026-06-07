@@ -1,6 +1,31 @@
+# macOS
 *.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Xcode local/user state
 *.xcuserstate
 *.xcscmblueprint
+*.moved-aside
+*.hmap
 **/xcuserdata/
+
+# Build products and reports
 DerivedData/
+build/
+*.xcresult
+
+# SwiftPM local build state
+.build/
+.swiftpm/
+
+# Local editor settings
 .vscode/
+.xcodebuildmcp/
+
+# Local environment
+.env
+.env.*
+!.env.example
