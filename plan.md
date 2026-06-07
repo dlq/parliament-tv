@@ -448,6 +448,16 @@ Channel surfing behavior:
 - Add optional logo/brand fields to the static channel catalogue with conservative rights status.
 - Test spike channel set on tvOS simulator/device and iOS simulator.
 
+### Phase 2b: Structure checkpoint
+
+Before adding more channels, logos, or metadata adapters, clean up the prototype structure so the app remains easy to iterate:
+
+- Split the current large SwiftUI surface into focused files: player screen, program drawer, guide rail, guide cards, and small status/pill components.
+- Make channel selection a single explicit action path so remote navigation, guide taps, focus updates, playback resume, and chrome reveal stay consistent.
+- Keep grouping, channel-code, source-label, and live-state logic outside SwiftUI views with focused tests.
+- Convert loose channel metadata strings such as legal review status, metadata level, and confidence into enums before the catalogue grows.
+- Decide whether the static catalogue should remain Swift seed data or move to a JSON/YAML resource before adding second-ring channels.
+
 ### Phase 3: Program metadata adapters
 
 - CPAC schedule adapter: daily TV-style schedule, now/next overlay, timezone handling.
