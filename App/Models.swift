@@ -100,3 +100,28 @@ struct ProgramMetadata: Hashable {
     let nextEventTime: String?
     let confidence: String
 }
+
+extension Channel {
+    func replacingProgram(_ program: ProgramMetadata) -> Channel {
+        Channel(
+            id: id,
+            name: name,
+            shortName: shortName,
+            jurisdictionLevel: jurisdictionLevel,
+            countryOrRegion: countryOrRegion,
+            legislature: legislature,
+            language: language,
+            sourceType: sourceType,
+            displayMode: displayMode,
+            playbackURL: playbackURL,
+            officialURL: officialURL,
+            attributionText: attributionText,
+            legalReviewStatus: legalReviewStatus,
+            technicalStatus: technicalStatus,
+            availability: availability,
+            metadataLevel: metadataLevel,
+            previewAssetName: previewAssetName,
+            program: program
+        )
+    }
+}

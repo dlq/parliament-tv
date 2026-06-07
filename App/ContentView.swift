@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var isChromeVisible = true
     @State private var isInAppWebOverlayVisible = false
     @State private var chromeDismissID = UUID()
+    @StateObject private var programMetadataStore = ProgramMetadataStore()
     @AppStorage("pinnedChannelIDs") private var pinnedChannelIDsStorage = GuideGroup.defaultPinnedChannelIDs.joined(separator: ",")
     @FocusState private var focusedChannelID: String?
 
@@ -40,7 +41,11 @@ struct ContentView: View {
     }
 
     private var selectedChannel: Channel {
-        channels.first { $0.id == selectedChannelID } ?? channels[0]
+        let channel = channels.first { $0.id == selectedChannelID } ?? channels[0]
+        if let program = programMetadataStore.metadataByChannelID[channel.id] {
+            return channel.replacingProgram(program)
+        }
+        return channel
     }
 
     private var pinnedChannelIDs: Set<String> {
@@ -100,6 +105,9 @@ struct ContentView: View {
         .macOSPlayerWindow()
         .onAppear {
             scheduleChromeDismissal()
+        }
+        .task {
+            await programMetadataStore.refreshCPAC()
         }
     }
 
