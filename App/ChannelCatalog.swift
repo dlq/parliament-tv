@@ -8,14 +8,31 @@
 import Foundation
 
 enum ChannelCatalog {
-    static let channels: [Channel] = [
-        cpac,
-        newZealand,
-        brazil,
-        denmark,
-        netherlands,
-        spain
-    ] + quebecChannels + ontarioChannels
+    static let channels: [Channel] = {
+        var channels = [
+            cpac,
+            newZealand,
+            brazil,
+            denmark,
+            netherlands,
+            spain,
+            france,
+            portugal,
+            greece,
+            luxembourg,
+            italySenate,
+            indiaSansad1,
+            indiaSansad2,
+            thailand,
+            slovakia
+        ]
+
+        #if os(macOS)
+        channels.append(mongolia)
+        #endif
+
+        return channels + quebecChannels + ontarioChannels + [nunavut]
+    }()
 
     private static let cpac = directChannel(
         id: "cpac-ca",
@@ -143,6 +160,216 @@ enum ChannelCatalog {
         confidence: "Medium"
     )
 
+    private static let france = directChannel(
+        id: "france-national-assembly",
+        name: "France National Assembly",
+        shortName: "FR",
+        jurisdictionLevel: .national,
+        countryOrRegion: "France",
+        legislature: "Assemblee nationale",
+        language: "French",
+        playbackURL: "https://assemblee-nationale.akamaized.net/live/live36/stream36.m3u8",
+        officialURL: "https://videos.assemblee-nationale.fr/direct.php",
+        attributionText: "Official National Assembly video portal HLS stream.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .eventBased,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "National Assembly live stream",
+        currentEventTime: "Active around public sittings and meetings",
+        nextEventTitle: "Official video portal schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let portugal = directChannel(
+        id: "portugal-artv",
+        name: "Portugal ARTV Canal Parlamento",
+        shortName: "PT",
+        jurisdictionLevel: .national,
+        countryOrRegion: "Portugal",
+        legislature: "Assembleia da Republica",
+        language: "Portuguese",
+        playbackURL: "https://playout172.livextend.cloud/liveiframe/_definst_/liveartvabr/playlist.m3u8",
+        officialURL: "https://www.parlamento.pt/",
+        attributionText: "Canal Parlamento HLS candidate; pair with official agenda metadata.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .eventBased,
+        metadataLevel: "Agenda target",
+        currentEventTitle: "ARTV Canal Parlamento",
+        currentEventTime: "Active around scheduled proceedings",
+        nextEventTitle: "Official agenda integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let greece = directChannel(
+        id: "greece-hellenic-parliament-tv",
+        name: "Greece Hellenic Parliament TV",
+        shortName: "GR",
+        jurisdictionLevel: .national,
+        countryOrRegion: "Greece",
+        legislature: "Hellenic Parliament",
+        language: "Greek",
+        playbackURL: "https://ert-ucdn.broadpeak-aas.com/bpk-tv/VOULITV/default/index.m3u8",
+        officialURL: "https://www.hellenicparliament.gr/",
+        attributionText: "Hellenic Parliament TV HLS candidate distributed through public broadcaster infrastructure.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .alwaysOn,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "Hellenic Parliament TV",
+        currentEventTime: "Official parliamentary TV feed",
+        nextEventTitle: "Official schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let luxembourg = directChannel(
+        id: "luxembourg-chamber-tv",
+        name: "Luxembourg Chamber TV",
+        shortName: "LU",
+        jurisdictionLevel: .national,
+        countryOrRegion: "Luxembourg",
+        legislature: "Chambre des Deputes",
+        language: "French / Luxembourgish",
+        playbackURL: "https://media02.webtvlive.eu/chd-edge/smil:chamber_tv_hd.smil/playlist.m3u8",
+        officialURL: "https://www.chd.lu/",
+        attributionText: "Chamber TV HLS candidate from official player infrastructure.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .eventBased,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "Chamber TV",
+        currentEventTime: "Active around scheduled proceedings",
+        nextEventTitle: "Official schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let italySenate = directChannel(
+        id: "italy-senate",
+        name: "Italy Senate",
+        shortName: "IT",
+        jurisdictionLevel: .national,
+        countryOrRegion: "Italy",
+        legislature: "Senato della Repubblica",
+        language: "Italian",
+        playbackURL: "https://senato-live.morescreens.com/SENATO_1_001/playlist.m3u8",
+        officialURL: "https://webtv.senato.it/",
+        attributionText: "Senate live HLS candidate; official source and terms need deeper review.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .eventBased,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "Senate live stream",
+        currentEventTime: "Active around scheduled proceedings",
+        nextEventTitle: "Official schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let indiaSansad1 = directChannel(
+        id: "india-sansad-tv-1",
+        name: "India Sansad TV 1",
+        shortName: "IN 1",
+        jurisdictionLevel: .national,
+        countryOrRegion: "India",
+        legislature: "Parliament of India",
+        language: "Hindi / English",
+        playbackURL: "https://d2lk5u59tns74c.cloudfront.net/out/v1/fff8f20221d5456e8922e689d71dedc3/index.m3u8",
+        officialURL: "https://sansadtv.nic.in/",
+        attributionText: "Sansad TV HLS candidate; terms and reliability require review.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .alwaysOn,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "Sansad TV feed 1",
+        currentEventTime: "Official parliamentary television feed",
+        nextEventTitle: "Official schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let indiaSansad2 = directChannel(
+        id: "india-sansad-tv-2",
+        name: "India Sansad TV 2",
+        shortName: "IN 2",
+        jurisdictionLevel: .national,
+        countryOrRegion: "India",
+        legislature: "Parliament of India",
+        language: "Hindi / English",
+        playbackURL: "https://d2lk5u59tns74c.cloudfront.net/out/v1/e4182054dce340da9e0ff38b6b3658a4/index.m3u8",
+        officialURL: "https://sansadtv.nic.in/",
+        attributionText: "Sansad TV HLS candidate; terms and reliability require review.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .alwaysOn,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "Sansad TV feed 2",
+        currentEventTime: "Official parliamentary television feed",
+        nextEventTitle: "Official schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let thailand = directChannel(
+        id: "thailand-parliament-tv",
+        name: "Thailand Parliament TV",
+        shortName: "TH",
+        jurisdictionLevel: .national,
+        countryOrRegion: "Thailand",
+        legislature: "National Assembly of Thailand",
+        language: "Thai",
+        playbackURL: "https://tv-live.tpchannel.org/live/tv.m3u8",
+        officialURL: "https://tpchannel.org/",
+        attributionText: "Thai Parliament TV HLS candidate; terms and reliability require review.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .alwaysOn,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "Thai Parliament TV",
+        currentEventTime: "Official parliamentary television feed",
+        nextEventTitle: "Official schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Medium"
+    )
+
+    private static let slovakia = directChannel(
+        id: "slovakia-tv-nrsr",
+        name: "Slovakia TV NRSR",
+        shortName: "SK",
+        jurisdictionLevel: .national,
+        countryOrRegion: "Slovakia",
+        legislature: "National Council of the Slovak Republic",
+        language: "Slovak",
+        playbackURL: "https://n11.stv.livebox.sk/stv-tv/stv4.stream/playlist.m3u8",
+        officialURL: "https://www.nrsr.sk/",
+        attributionText: "Parliamentary/public-broadcaster HLS candidate; source ownership needs review.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .eventBased,
+        metadataLevel: "Schedule target",
+        currentEventTitle: "TV NRSR",
+        currentEventTime: "Active around scheduled proceedings",
+        nextEventTitle: "Official schedule integration",
+        nextEventTime: "Planned",
+        confidence: "Low"
+    )
+
+    private static let mongolia = directDashChannel(
+        id: "mongolia-parliament-tv",
+        name: "Mongolia Parliament TV",
+        shortName: "MN",
+        jurisdictionLevel: .national,
+        countryOrRegion: "Mongolia",
+        legislature: "State Great Khural",
+        language: "Mongolian",
+        playbackURL: "https://cdn4.skygo.mn/live/disk1/Parlament/DASH-FTA/Parlament.mpd",
+        officialURL: "https://www.parliament.mn/",
+        attributionText: "SkyGo DASH distribution candidate for parliamentary television; ownership and terms need review.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .alwaysOn,
+        metadataLevel: "Signal state only",
+        currentEventTitle: "Parliament TV DASH stream",
+        currentEventTime: "macOS playback experiment",
+        nextEventTitle: "Official source review",
+        nextEventTime: "Planned",
+        confidence: "Low"
+    )
+
     private static let quebecChannels: [Channel] = (1...14).map { channelNumber in
         let channel = String(format: "%02d", channelNumber)
         return directChannel(
@@ -197,41 +424,45 @@ enum ChannelCatalog {
         )
     }
 
+    private static let nunavut = directChannel(
+        id: "nunavut-legislative-assembly-tv",
+        name: "Nunavut Legislative Assembly TV",
+        shortName: "NU",
+        jurisdictionLevel: .subnational,
+        countryOrRegion: "Nunavut",
+        legislature: "Legislative Assembly of Nunavut",
+        language: "English / Inuktitut",
+        playbackURL: "https://temp2.isilive.ca/live/nunavut/live-eng/index.m3u8",
+        officialURL: "https://assembly.nu.ca/",
+        attributionText: "iSi LIVE HLS candidate; official page and terms still need confirmation.",
+        legalReviewStatus: "Personal use only until reviewed",
+        availability: .eventBased,
+        metadataLevel: "Signal state only",
+        currentEventTitle: "Legislative Assembly TV",
+        currentEventTime: "Active around scheduled proceedings",
+        nextEventTitle: "Official source and schedule review",
+        nextEventTime: "Planned",
+        confidence: "Low"
+    )
+
     static let sourcesRequiringExternalPlayer: [Channel] = [
         linkOutChannel(
-            id: "uk-parliament",
-            name: "UK Parliament Live",
+            id: "uk-parliament-youtube",
+            name: "UK Parliament YouTube",
             shortName: "UK",
             jurisdictionLevel: .national,
             countryOrRegion: "United Kingdom",
             legislature: "UK Parliament",
             language: "English",
-            sourceType: .officialPage,
-            officialURL: "https://www.parliamentlive.tv/",
-            attributionText: "Official Parliamentlive.tv player; direct HLS not validated.",
-            legalReviewStatus: "Link only",
+            sourceType: .youtube,
+            officialURL: "https://www.youtube.com/UKParliament",
+            attributionText: "Selected live events and clips.",
+            legalReviewStatus: "Embed only",
             technicalStatus: .linkOnly,
-            metadataLevel: "Daily schedule target",
-            currentEventTitle: "Official player required",
-            currentEventTime: "Open source page for live and archived events",
-            confidence: "High"
-        ),
-        linkOutChannel(
-            id: "european-parliament",
-            name: "European Parliament",
-            shortName: "EP",
-            jurisdictionLevel: .supranational,
-            countryOrRegion: "European Union",
-            legislature: "European Parliament",
-            language: "Multilingual",
-            sourceType: .officialPage,
-            officialURL: "https://multimedia.europarl.europa.eu/en/webstreaming",
-            attributionText: "Official Multimedia Centre source; native stream path pending.",
-            legalReviewStatus: "Link only",
-            technicalStatus: .needsReview,
-            metadataLevel: "Daily schedule target",
-            currentEventTitle: "Official webstreaming portal",
-            currentEventTime: "Open source page for active streams",
+            metadataLevel: "YouTube current event target",
+            currentEventTitle: "Channel page",
+            currentEventTime: "Open for selected live streams",
+            previewAssetName: "UKParliamentYouTubePreview",
             confidence: "High"
         ),
         linkOutChannel(
@@ -244,12 +475,51 @@ enum ChannelCatalog {
             language: "English",
             sourceType: .youtube,
             officialURL: "https://www.youtube.com/@AUSParliamentLive",
-            attributionText: "Official YouTube channel; in-app support is intentionally second class.",
+            attributionText: "Live events hosted outside the native player.",
             legalReviewStatus: "Embed only",
             technicalStatus: .linkOnly,
             metadataLevel: "YouTube current event target",
-            currentEventTitle: "Official YouTube live source",
-            currentEventTime: "Open channel for active streams",
+            currentEventTitle: "Channel page",
+            currentEventTime: "Open for active streams",
+            previewAssetName: "AustraliaParliamentYouTubePreview",
+            confidence: "Medium"
+        ),
+        linkOutChannel(
+            id: "taiwan-parliamentary-tv-youtube",
+            name: "Taiwan Parliamentary TV",
+            shortName: "TW",
+            jurisdictionLevel: .national,
+            countryOrRegion: "Taiwan",
+            legislature: "Legislative Yuan",
+            language: "Mandarin",
+            sourceType: .youtube,
+            officialURL: "https://www.parliamentarytv.org.tw/",
+            attributionText: "Live portal with channels and meeting playlists.",
+            legalReviewStatus: "Embed only",
+            technicalStatus: .linkOnly,
+            metadataLevel: "YouTube current event target",
+            currentEventTitle: "Live portal",
+            currentEventTime: "Open for active streams",
+            previewAssetName: "TaiwanParliamentaryTVPreview",
+            confidence: "Medium"
+        ),
+        linkOutChannel(
+            id: "costa-rica-assembly-youtube",
+            name: "Costa Rica Assembly YouTube",
+            shortName: "CR",
+            jurisdictionLevel: .national,
+            countryOrRegion: "Costa Rica",
+            legislature: "Asamblea Legislativa",
+            language: "Spanish",
+            sourceType: .youtube,
+            officialURL: "https://www.youtube.com/@AsambleaCRC",
+            attributionText: "Live and recorded Assembly proceedings.",
+            legalReviewStatus: "Embed only",
+            technicalStatus: .linkOnly,
+            metadataLevel: "YouTube current event target",
+            currentEventTitle: "Channel page",
+            currentEventTime: "Open for active streams",
+            previewAssetName: "CostaRicaAssemblyYouTubePreview",
             confidence: "Medium"
         )
     ]
@@ -291,6 +561,55 @@ enum ChannelCatalog {
             technicalStatus: .validated,
             availability: availability,
             metadataLevel: metadataLevel,
+            previewAssetName: nil,
+            program: ProgramMetadata(
+                currentEventTitle: currentEventTitle,
+                currentEventTime: currentEventTime,
+                nextEventTitle: nextEventTitle,
+                nextEventTime: nextEventTime,
+                confidence: confidence
+            )
+        )
+    }
+
+    private static func directDashChannel(
+        id: String,
+        name: String,
+        shortName: String,
+        jurisdictionLevel: JurisdictionLevel,
+        countryOrRegion: String,
+        legislature: String,
+        language: String,
+        playbackURL: String,
+        officialURL: String,
+        attributionText: String,
+        legalReviewStatus: String,
+        availability: Availability,
+        metadataLevel: String,
+        currentEventTitle: String,
+        currentEventTime: String,
+        nextEventTitle: String?,
+        nextEventTime: String?,
+        confidence: String
+    ) -> Channel {
+        Channel(
+            id: id,
+            name: name,
+            shortName: shortName,
+            jurisdictionLevel: jurisdictionLevel,
+            countryOrRegion: countryOrRegion,
+            legislature: legislature,
+            language: language,
+            sourceType: .directDASH,
+            displayMode: .nativePlayer,
+            playbackURL: URL(string: playbackURL),
+            officialURL: URL(string: officialURL)!,
+            attributionText: attributionText,
+            legalReviewStatus: legalReviewStatus,
+            technicalStatus: .needsReview,
+            availability: availability,
+            metadataLevel: metadataLevel,
+            previewAssetName: nil,
             program: ProgramMetadata(
                 currentEventTitle: currentEventTitle,
                 currentEventTime: currentEventTime,
@@ -317,6 +636,7 @@ enum ChannelCatalog {
         metadataLevel: String,
         currentEventTitle: String,
         currentEventTime: String,
+        previewAssetName: String?,
         confidence: String
     ) -> Channel {
         Channel(
@@ -336,6 +656,7 @@ enum ChannelCatalog {
             technicalStatus: technicalStatus,
             availability: .eventBased,
             metadataLevel: metadataLevel,
+            previewAssetName: previewAssetName,
             program: ProgramMetadata(
                 currentEventTitle: currentEventTitle,
                 currentEventTime: currentEventTime,

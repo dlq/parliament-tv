@@ -66,6 +66,7 @@ These are included because they are personally relevant and already validated.
 | --- | --- | --- | --- |
 | Quebec National Assembly canal05/canal06/canal14 seed set | Direct HLS | current event from live-list API | Keep all 14 known channels in data, but surface active channels first. |
 | Ontario Legislative Assembly House EN | Direct HLS | current/next from OLA calendar | Add committee/media channels after playback spike. |
+| Nunavut Legislative Assembly TV | Direct HLS candidate | signal state only | Added as a low-confidence Regions channel; official page, schedule, and terms review still required. |
 
 ### Core national/supranational set
 
@@ -352,7 +353,7 @@ These are polish and interaction references, not the core product category. The 
 FAST/live-guide ideas to apply:
 
 - Open directly into playback or the last-used guide position. FAST apps work because the user is never far from something playing.
-- Use simple guide categories, not deep taxonomy: `Pinned`, `Local`, `National`, `International`, `Committees`, `Event-based`, `Link-out`.
+- Use simple guide categories, not deep taxonomy: `Pinned`, `National`, `Local`, `Committees`, `Event-based`, `YouTube`, and official-player fallbacks.
 - Preserve stable channel order and optionally show short channel numbers or codes. Parliament streams are often room/feed based, so stable positions reduce cognitive load.
 - Let users hide noisy or inactive channels later; the first version can approximate this with pinned/local groups.
 - Treat missing guide data as normal. Show `Schedule unavailable` or `Signal available, program unknown` instead of breaking the guide.
@@ -387,8 +388,8 @@ Prototype lessons from the first SwiftUI pass:
 
 Next UI pass:
 
-- Add guide groups: `Pinned`, `Quebec`, `Ontario`, `World`, and later `Link-out`.
-- Keep local-priority pinned channels first: Quebec active channels, Ontario House, CPAC.
+- Add guide groups: `Pinned`, `National`, `Regions`, and `YouTube`.
+- Keep local-priority pinned channels first: Quebec active channels, Ontario House, Nunavut candidate, and CPAC.
 - Make native HLS channels the main surf rail; keep UK Parliament, European Parliament, Australia Parliament, and other official-player/YouTube sources in a separate source-detail/link-out surface until native Apple playback is validated.
 - Evolve the bottom rail toward a now/next timeline, but do not build a dense cable-grid EPG for the MVP.
 - Add a compact on-player mini guide with current channel, now/next metadata, source quality, language/captions, and official source.
@@ -477,6 +478,7 @@ Before adding more channels, logos, or metadata adapters, clean up the prototype
 - Now/next overlay.
 - Compact on-player mini guide.
 - Source details overlay.
+- Follow up on macOS AVKit floating controls: the native rewind-side control cluster can show overlapping/conflicting icons in some windows. Keep floating controls for now, but test whether a custom control strip, inline controls with a separate guide affordance, or an AVKit workaround is the best fix.
 - Official logo or fallback monogram on channel cards and source-detail surfaces when rights are clear.
 - Error/off-air/upcoming states.
 - Separate non-native sources from the main surf rail until playback is validated.
@@ -489,16 +491,18 @@ Before adding more channels, logos, or metadata adapters, clean up the prototype
 - Captions/audio language discovery.
 - Terms review pass.
 - Logo/brand asset review pass with provenance, accessibility labels, and fallbacks.
+- Periodically refresh bundled 16:9 external-source page captures, especially YouTube/link-out previews; track capture date, source URL, and any consent/sign-in/cookie UI that appears in the screenshot.
 - Add stretch channels.
 
 ### Phase 5b: Curated second ring
 
-Do not open a broad sub-national catalogue yet. After the Apple-first MVP is stable, add a curated second ring:
+Do not open a broad sub-national catalogue yet. Quebec, Ontario, and the low-confidence Nunavut HLS candidate are now grouped under `Regions`. After the Apple-first MVP is stable, add a curated second ring:
 
-- Canada expansion: BC and Nunavut after Quebec/Ontario.
+- Canada expansion: verify Nunavut official page/terms/schedule, then add BC, Alberta, Saskatchewan, and Manitoba as official-player/schedule or validated-HLS candidates.
 - UK devolved parliaments: Scotland, Wales/Senedd, and Northern Ireland as official-player/schedule cards.
 - Australia states: NSW, Queensland, WA, and Victoria as official-player/schedule cards.
 - Germany pilot: Baden-Wurttemberg and NRW for possible direct HLS extraction.
+- Lower-priority direct-HLS candidates: Jalisco and Colima only after source ownership, legislative relevance, and terms are reviewed.
 - Supra-national: PACE and Nordic Council as event-based official-player cards.
 
 Only direct HLS or AVPlayer-compatible streams should enter the main channel rail. Official-player-only sub-national and supra-national bodies should stay metadata/link-out cards until an Apple-compatible playback path is validated.

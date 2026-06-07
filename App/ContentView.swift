@@ -14,7 +14,9 @@ struct ContentView: View {
     @State private var selectedChannelID = ChannelCatalog.channels[0].id
     @State private var selectedGuideGroupID = GuideGroup.pinnedID
     @State private var isChromeVisible = true
+    @State private var isInAppWebOverlayVisible = false
     @State private var chromeDismissID = UUID()
+    @AppStorage("pinnedChannelIDs") private var pinnedChannelIDsStorage = GuideGroup.defaultPinnedChannelIDs.joined(separator: ",")
     @FocusState private var focusedChannelID: String?
 
     private var channels: [Channel] {
@@ -23,13 +25,14 @@ struct ContentView: View {
 
     private var nativeSurfChannels: [Channel] {
         guideGroups
-            .filter { $0.id != GuideGroup.linkOutID }
+            .filter { $0.id != GuideGroup.youtubeID }
             .flatMap(\.channels)
+            .filter { $0.displayMode == .nativePlayer }
             .uniquedByID()
     }
 
     private var guideGroups: [GuideGroup] {
-        GuideGroup.build(nativeChannels: nativeChannels, externalChannels: externalChannels)
+        GuideGroup.build(nativeChannels: nativeChannels, externalChannels: externalChannels, pinnedChannelIDs: pinnedChannelIDs)
     }
 
     private var selectedGuideGroup: GuideGroup {
@@ -40,12 +43,29 @@ struct ContentView: View {
         channels.first { $0.id == selectedChannelID } ?? channels[0]
     }
 
+    private var pinnedChannelIDs: Set<String> {
+        Set(
+            pinnedChannelIDsStorage
+                .split(separator: ",")
+                .map(String.init)
+                .filter { !$0.isEmpty }
+        )
+    }
+
+    private var isSelectedChannelPinned: Bool {
+        pinnedChannelIDs.contains(selectedChannelID)
+    }
+
     var body: some View {
         GeometryReader { proxy in
             let isCompact = proxy.size.width < 760
 
             ZStack {
-                PlayerSurface(channel: selectedChannel, style: .fullBleed)
+                PlayerSurface(
+                    channel: selectedChannel,
+                    style: .fullBleed,
+                    isInAppWebOverlayVisible: $isInAppWebOverlayVisible
+                )
                     .ignoresSafeArea()
 
                 if isChromeVisible {
@@ -62,12 +82,22 @@ struct ContentView: View {
                         .padding(.horizontal, 46)
                         .padding(.vertical, 34)
                 }
+
+                macOSPointerActionOverlay
             }
         }
         .remoteChannelNavigation(
             previous: selectPreviousChannel,
             next: selectNextChannel
         )
+        .macOSChannelCommands(
+            showGuide: showChromeTemporarily,
+            previous: selectPreviousChannel,
+            next: selectNextChannel,
+            togglePin: toggleSelectedChannelPin,
+            isCurrentChannelPinned: isSelectedChannelPinned
+        )
+        .macOSPlayerWindow()
         .onAppear {
             scheduleChromeDismissal()
         }
@@ -84,6 +114,9 @@ struct ContentView: View {
                     groups: guideGroups,
                     selectedGroupID: $selectedGuideGroupID,
                     selectedChannelID: $selectedChannelID,
+                    isChannelPinned: isSelectedChannelPinned,
+                    togglePin: toggleSelectedChannelPin,
+                    dismissGuide: hideChrome,
                     focusedChannelID: $focusedChannelID
                 )
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
@@ -103,12 +136,27 @@ struct ContentView: View {
                     groups: guideGroups,
                     selectedGroupID: $selectedGuideGroupID,
                     selectedChannelID: $selectedChannelID,
+                    isChannelPinned: isSelectedChannelPinned,
+                    togglePin: toggleSelectedChannelPin,
+                    dismissGuide: hideChrome,
                     focusedChannelID: $focusedChannelID
                 )
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
         .animation(.easeInOut(duration: 0.22), value: isChromeVisible)
+    }
+
+    @ViewBuilder
+    private var macOSPointerActionOverlay: some View {
+        #if os(macOS)
+        MacPointerActionOverlay(
+            isGuideVisible: isChromeVisible || isInAppWebOverlayVisible,
+            showGuide: showChromeTemporarily,
+            previous: selectPreviousChannel,
+            next: selectNextChannel
+        )
+        #endif
     }
 
     private func selectNextChannel() {
@@ -120,7 +168,7 @@ struct ContentView: View {
     }
 
     private func selectAdjacentChannel(direction: ChannelNavigationDirection) {
-        let groupChannels = selectedGuideGroup.id == GuideGroup.linkOutID ? selectedGuideGroup.channels : nativeSurfChannels
+        let groupChannels = selectedGuideGroup.id == GuideGroup.youtubeID ? selectedGuideGroup.channels : nativeSurfChannels
         guard let index = groupChannels.firstIndex(where: { $0.id == selectedChannelID }) else {
             selectChannel(groupChannels[0])
             return
@@ -137,6 +185,7 @@ struct ContentView: View {
     }
 
     private func selectChannel(_ channel: Channel) {
+        isInAppWebOverlayVisible = false
         selectedChannelID = channel.id
         if !selectedGuideGroup.channels.contains(channel) {
             selectedGuideGroupID = guideGroups.first { $0.channels.contains(channel) }?.id ?? selectedGuideGroupID
@@ -150,12 +199,34 @@ struct ContentView: View {
         scheduleChromeDismissal()
     }
 
+    private func hideChrome() {
+        chromeDismissID = UUID()
+        isChromeVisible = false
+    }
+
+    private func toggleSelectedChannelPin() {
+        guard selectedChannel.displayMode == .nativePlayer else { return }
+
+        var updatedPinnedIDs = pinnedChannelIDs
+        if updatedPinnedIDs.contains(selectedChannelID) {
+            updatedPinnedIDs.remove(selectedChannelID)
+        } else {
+            updatedPinnedIDs.insert(selectedChannelID)
+        }
+
+        pinnedChannelIDsStorage = nativeChannels
+            .map(\.id)
+            .filter { updatedPinnedIDs.contains($0) }
+            .joined(separator: ",")
+        showChromeTemporarily()
+    }
+
     private func scheduleChromeDismissal() {
         let dismissID = UUID()
         chromeDismissID = dismissID
 
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(5))
+            try? await Task.sleep(for: .seconds(9))
             guard chromeDismissID == dismissID else { return }
             isChromeVisible = false
         }
@@ -171,16 +242,202 @@ private enum ChannelNavigationDirection {
     case next
 }
 
+#if os(macOS)
+private struct MacPointerActionOverlay: View {
+    let isGuideVisible: Bool
+    let showGuide: () -> Void
+    let previous: () -> Void
+    let next: () -> Void
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                if !isGuideVisible {
+                    HStack(spacing: 0) {
+                        MacPointerActionHotspot(
+                            title: "Previous",
+                            systemImage: "chevron.left",
+                            placement: .left,
+                            action: previous
+                        )
+                        .frame(width: sideWidth(for: proxy.size.width))
+
+                        Spacer(minLength: 0)
+
+                        MacPointerActionHotspot(
+                            title: "Next",
+                            systemImage: "chevron.right",
+                            placement: .right,
+                            action: next
+                        )
+                        .frame(width: sideWidth(for: proxy.size.width))
+                    }
+                }
+
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+
+                    if !isGuideVisible {
+                        HStack(spacing: 0) {
+                            MacPointerActionHotspot(
+                                title: "Guide",
+                                systemImage: "chevron.up",
+                                placement: .bottom,
+                                action: showGuide
+                            )
+                            .frame(maxWidth: .infinity)
+
+                            Color.clear
+                                .frame(width: playerControlsPassthroughWidth(for: proxy.size.width))
+                                .allowsHitTesting(false)
+
+                            MacPointerActionHotspot(
+                                title: "Guide",
+                                systemImage: "chevron.up",
+                                placement: .bottom,
+                                action: showGuide
+                            )
+                            .frame(maxWidth: .infinity)
+                        }
+                        .frame(height: bottomHeight(for: proxy.size.height))
+                        .transition(.opacity)
+                    }
+                }
+            }
+            .animation(.easeInOut(duration: 0.18), value: isGuideVisible)
+        }
+        .ignoresSafeArea()
+    }
+
+    private func sideWidth(for width: CGFloat) -> CGFloat {
+        min(max(width * 0.08, 74), 128)
+    }
+
+    private func bottomHeight(for height: CGFloat) -> CGFloat {
+        min(max(height * 0.12, 72), 116)
+    }
+
+    private func playerControlsPassthroughWidth(for width: CGFloat) -> CGFloat {
+        min(max(width * 0.36, 420), 680)
+    }
+}
+
+private struct MacPointerActionHotspot: View {
+    let title: String
+    let systemImage: String
+    let placement: Placement
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                hoverFill
+
+                Label(title, systemImage: systemImage)
+                    .font(.callout.weight(.bold))
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(.white.opacity(isHovered ? 0.86 : 0.0))
+                    .padding(14)
+                    .background(.black.opacity(isHovered ? 0.30 : 0.0), in: Circle())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: labelAlignment)
+                    .padding(labelPadding)
+            }
+        }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.16)) {
+                isHovered = hovering
+            }
+        }
+        .help(title)
+    }
+
+    private var hoverFill: some View {
+        Rectangle()
+            .fill(gradient)
+            .opacity(isHovered ? 1 : 0.02)
+    }
+
+    private var gradient: LinearGradient {
+        switch placement {
+        case .left:
+            LinearGradient(
+                colors: [.black.opacity(0.24), .clear],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        case .right:
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.24)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        case .bottom:
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.26)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+
+    private var labelAlignment: Alignment {
+        switch placement {
+        case .left:
+            .leading
+        case .right:
+            .trailing
+        case .bottom:
+            .bottom
+        }
+    }
+
+    private var labelPadding: EdgeInsets {
+        switch placement {
+        case .left:
+            EdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 0)
+        case .right:
+            EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 18)
+        case .bottom:
+            EdgeInsets(top: 0, leading: 0, bottom: 18, trailing: 0)
+        }
+    }
+
+    enum Placement {
+        case left
+        case right
+        case bottom
+    }
+}
+#endif
+
 private struct ProgramDrawer: View {
     let channel: Channel
     let channelCount: Int
     let groups: [GuideGroup]
     @Binding var selectedGroupID: String
     @Binding var selectedChannelID: String
+    let isChannelPinned: Bool
+    let togglePin: () -> Void
+    let dismissGuide: () -> Void
     var focusedChannelID: FocusState<String?>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            Button(action: dismissGuide) {
+                Capsule()
+                    .fill(.white.opacity(0.34))
+                    .frame(width: 66, height: 6)
+                .frame(width: 104, height: 24)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .help("Hide guide")
+
             HStack(alignment: .firstTextBaseline, spacing: 14) {
                 Text("Parliaments")
                     .font(.caption.weight(.heavy))
@@ -196,6 +453,19 @@ private struct ProgramDrawer: View {
                 Label(channel.sourceQualityLabel, systemImage: "checkmark.seal")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.white.opacity(0.74))
+
+                if channel.displayMode == .nativePlayer {
+                    Button(action: togglePin) {
+                        Label(isChannelPinned ? "Unpin channel" : "Pin channel", systemImage: isChannelPinned ? "pin.fill" : "pin")
+                            .labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.plain)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(isChannelPinned ? .black : .white.opacity(0.78))
+                    .padding(8)
+                    .background(isChannelPinned ? .white : .white.opacity(0.14), in: RoundedRectangle(cornerRadius: 6))
+                    .help(isChannelPinned ? "Unpin channel" : "Pin channel")
+                }
             }
 
             ViewThatFits(in: .horizontal) {
@@ -580,7 +850,76 @@ private extension View {
     func remoteChannelNavigation(previous: @escaping () -> Void, next: @escaping () -> Void) -> some View {
         modifier(RemoteChannelNavigation(previous: previous, next: next))
     }
+
+    @ViewBuilder
+    func macOSChannelCommands(
+        showGuide: @escaping () -> Void,
+        previous: @escaping () -> Void,
+        next: @escaping () -> Void,
+        togglePin: @escaping () -> Void,
+        isCurrentChannelPinned: Bool
+    ) -> some View {
+        #if os(macOS)
+        focusedSceneValue(\.channelCommands, ChannelCommands(
+            showGuide: showGuide,
+            selectPreviousChannel: previous,
+            selectNextChannel: next,
+            togglePin: togglePin,
+            isCurrentChannelPinned: isCurrentChannelPinned
+        ))
+        #else
+        self
+        #endif
+    }
+
+    @ViewBuilder
+    func macOSPlayerWindow() -> some View {
+        #if os(macOS)
+        background(MacPlayerWindowConfigurator())
+        #else
+        self
+        #endif
+    }
 }
+
+#if os(macOS)
+private struct MacPlayerWindowConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.postsFrameChangedNotifications = false
+
+        DispatchQueue.main.async {
+            configure(window: view.window)
+        }
+
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        DispatchQueue.main.async {
+            configure(window: view.window)
+        }
+    }
+
+    private func configure(window: NSWindow?) {
+        guard let window else { return }
+
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isMovableByWindowBackground = true
+        window.backgroundColor = .black
+        window.contentAspectRatio = NSSize(width: 16, height: 9)
+
+        if !window.styleMask.contains(.fullSizeContentView) {
+            window.styleMask.insert(.fullSizeContentView)
+        }
+
+        window.standardWindowButton(.closeButton)?.isHidden = false
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = false
+        window.standardWindowButton(.zoomButton)?.isHidden = false
+    }
+}
+#endif
 
 private extension Array {
     func index(afterWrapping index: Index) -> Index {

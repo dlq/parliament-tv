@@ -23,12 +23,14 @@ enum JurisdictionLevel: String {
 
 enum SourceType: String {
     case directHLS
+    case directDASH
     case officialPage
     case youtube
 
     var label: String {
         switch self {
         case .directHLS: "Direct HLS"
+        case .directDASH: "Direct DASH"
         case .officialPage: "Official page"
         case .youtube: "YouTube"
         }
@@ -87,6 +89,7 @@ struct Channel: Identifiable, Hashable {
     let technicalStatus: TechnicalStatus
     let availability: Availability
     let metadataLevel: String
+    let previewAssetName: String?
     let program: ProgramMetadata
 }
 

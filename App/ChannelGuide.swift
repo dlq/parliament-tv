@@ -2,7 +2,15 @@ import Foundation
 
 struct GuideGroup: Identifiable, Hashable {
     static let pinnedID = "pinned"
-    static let linkOutID = "link-out"
+    static let youtubeID = "youtube"
+    static let defaultPinnedChannelIDs = [
+        "cpac-ca",
+        "quebec-canal05",
+        "quebec-canal06",
+        "quebec-canal14",
+        "ontario-house-en",
+        "nunavut-legislative-assembly-tv"
+    ]
 
     let id: String
     let title: String
@@ -13,28 +21,18 @@ struct GuideGroup: Identifiable, Hashable {
         "\(channels.count)"
     }
 
-    static func build(nativeChannels: [Channel], externalChannels: [Channel]) -> [GuideGroup] {
+    static func build(nativeChannels: [Channel], externalChannels: [Channel], pinnedChannelIDs: Set<String>) -> [GuideGroup] {
         let channelByID = Dictionary(uniqueKeysWithValues: nativeChannels.map { ($0.id, $0) })
-        let pinned = [
-            channelByID["cpac-ca"],
-            channelByID["quebec-canal05"],
-            channelByID["quebec-canal06"],
-            channelByID["quebec-canal14"],
-            channelByID["ontario-house-en"]
-        ].compactMap { $0 }
+        let pinned = nativeChannels.filter { pinnedChannelIDs.contains($0.id) && channelByID[$0.id] != nil }
 
-        let quebec = nativeChannels.filter { $0.countryOrRegion == "Quebec" }
-        let ontario = nativeChannels.filter { $0.countryOrRegion == "Ontario" }
-        let world = nativeChannels.filter { channel in
-            channel.jurisdictionLevel != .subnational && channel.id != "cpac-ca"
-        }
+        let regions = nativeChannels.filter { $0.jurisdictionLevel == .subnational }
+        let national = nativeChannels.filter { $0.jurisdictionLevel != .subnational }
 
         return [
             GuideGroup(id: pinnedID, title: "Pinned", systemImage: "pin.fill", channels: pinned),
-            GuideGroup(id: "quebec", title: "Quebec", systemImage: "building.columns.fill", channels: quebec),
-            GuideGroup(id: "ontario", title: "Ontario", systemImage: "captions.bubble.fill", channels: ontario),
-            GuideGroup(id: "world", title: "World", systemImage: "globe.americas.fill", channels: world),
-            GuideGroup(id: linkOutID, title: "Link-out", systemImage: "arrow.up.forward.square.fill", channels: externalChannels)
+            GuideGroup(id: "national", title: "National", systemImage: "globe.americas.fill", channels: national),
+            GuideGroup(id: "regions", title: "Regions", systemImage: "building.columns.fill", channels: regions),
+            GuideGroup(id: youtubeID, title: "YouTube", systemImage: "play.rectangle.fill", channels: externalChannels)
         ].filter { !$0.channels.isEmpty }
     }
 }
@@ -62,6 +60,8 @@ extension Channel {
             "024 ON"
         case "ontario-media-en":
             "025 ON"
+        case "nunavut-legislative-assembly-tv":
+            "030 NU"
         case "new-zealand-parliament":
             "101 NZ"
         case "brazil-tv-camara":
@@ -72,12 +72,34 @@ extension Channel {
             "104 NL"
         case "spain-canal-parlamento":
             "105 ES"
-        case "uk-parliament":
+        case "france-national-assembly":
+            "106 FR"
+        case "portugal-artv":
+            "107 PT"
+        case "greece-hellenic-parliament-tv":
+            "108 GR"
+        case "luxembourg-chamber-tv":
+            "109 LU"
+        case "italy-senate":
+            "110 IT"
+        case "india-sansad-tv-1":
+            "111 IN"
+        case "india-sansad-tv-2":
+            "112 IN"
+        case "thailand-parliament-tv":
+            "113 TH"
+        case "slovakia-tv-nrsr":
+            "114 SK"
+        case "mongolia-parliament-tv":
+            "115 MN"
+        case "uk-parliament-youtube":
             "901 UK"
-        case "european-parliament":
-            "902 EP"
         case "australia-parliament-youtube":
-            "903 AU"
+            "902 AU"
+        case "taiwan-parliamentary-tv-youtube":
+            "903 TW"
+        case "costa-rica-assembly-youtube":
+            "904 CR"
         default:
             shortName
         }
@@ -85,6 +107,9 @@ extension Channel {
 
     var liveStateLabel: String {
         if displayMode == .linkOut {
+            if sourceType == .youtube {
+                return "YouTube"
+            }
             return "Link-out"
         }
 
@@ -121,10 +146,12 @@ extension Channel {
         switch sourceType {
         case .directHLS:
             return "Official HLS"
+        case .directDASH:
+            return "DASH"
         case .officialPage:
             return "Link out"
         case .youtube:
-            return "Official YouTube"
+            return "YouTube"
         }
     }
 }
