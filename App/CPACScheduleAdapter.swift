@@ -98,7 +98,54 @@ enum CPACScheduleAdapter {
 final class ProgramMetadataStore: ObservableObject {
     @Published private(set) var metadataByChannelID: [String: ProgramMetadata] = [:]
 
-    func refreshCPAC() async {
+    func refresh(channels: [Channel]) async {
+        await refreshHLSFallbacks(channels: channels)
+        await refreshQuebec()
+        await refreshCPAC()
+    }
+
+    private func refreshHLSFallbacks(channels: [Channel]) async {
+        await withTaskGroup(of: (String, ProgramMetadata)?.self) { group in
+            for channel in channels where channel.sourceType == .directHLS {
+                guard let playbackURL = channel.playbackURL else { continue }
+
+                group.addTask {
+                    let checkedAt = Date()
+                    do {
+                        var request = URLRequest(url: playbackURL)
+                        request.timeoutInterval = 6
+                        request.setValue("bytes=0-2047", forHTTPHeaderField: "Range")
+                        let (data, response) = try await URLSession.shared.data(for: request)
+                        let status = HLSProgramMetadataAdapter.status(from: data, response: response)
+                        return (
+                            channel.id,
+                            HLSProgramMetadataAdapter.signalMetadata(
+                                for: channel,
+                                status: status,
+                                checkedAt: checkedAt
+                            )
+                        )
+                    } catch {
+                        return (
+                            channel.id,
+                            HLSProgramMetadataAdapter.signalMetadata(
+                                for: channel,
+                                status: .unavailable,
+                                checkedAt: checkedAt
+                            )
+                        )
+                    }
+                }
+            }
+
+            for await result in group {
+                guard let result else { continue }
+                metadataByChannelID[result.0] = result.1
+            }
+        }
+    }
+
+    private func refreshCPAC() async {
         do {
             let (data, _) = try await URLSession.shared.data(from: CPACScheduleAdapter.scheduleURL)
             guard let html = String(data: data, encoding: .utf8) else { return }
@@ -109,14 +156,19 @@ final class ProgramMetadataStore: ObservableObject {
             // Keep the static catalogue metadata if the schedule page is unavailable.
         }
     }
-}
 
-private extension TimeZone {
-    var shortDisplayName: String {
-        if identifier == "America/Toronto" || identifier == "America/New_York" {
-            return "ET"
+    private func refreshQuebec() async {
+        do {
+            async let liveResult = URLSession.shared.data(for: QuebecWebdiffusionAdapter.request(for: QuebecWebdiffusionAdapter.liveURL))
+            async let upcomingResult = URLSession.shared.data(for: QuebecWebdiffusionAdapter.request(for: QuebecWebdiffusionAdapter.upcomingURL))
+            let (live, upcoming) = try await (liveResult, upcomingResult)
+            let metadata = try QuebecWebdiffusionAdapter.programMetadataByChannelID(
+                liveData: live.0,
+                upcomingData: upcoming.0
+            )
+            metadataByChannelID.merge(metadata) { _, new in new }
+        } catch {
+            // Keep signal-state metadata if the Quebec schedule API is unavailable.
         }
-
-        return abbreviation() ?? identifier
     }
 }

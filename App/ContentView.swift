@@ -15,7 +15,6 @@ struct ContentView: View {
     @State private var selectedGuideGroupID = GuideGroup.pinnedID
     @State private var isChromeVisible = true
     @State private var isInAppWebOverlayVisible = false
-    @State private var chromeDismissID = UUID()
     @StateObject private var programMetadataStore = ProgramMetadataStore()
     @AppStorage("pinnedChannelIDs") private var pinnedChannelIDsStorage = GuideGroup.defaultPinnedChannelIDs.joined(separator: ",")
     @FocusState private var focusedChannelID: String?
@@ -103,11 +102,8 @@ struct ContentView: View {
             isCurrentChannelPinned: isSelectedChannelPinned
         )
         .macOSPlayerWindow()
-        .onAppear {
-            scheduleChromeDismissal()
-        }
         .task {
-            await programMetadataStore.refreshCPAC()
+            await programMetadataStore.refresh(channels: channels)
         }
     }
 
@@ -204,11 +200,9 @@ struct ContentView: View {
 
     private func showChromeTemporarily() {
         isChromeVisible = true
-        scheduleChromeDismissal()
     }
 
     private func hideChrome() {
-        chromeDismissID = UUID()
         isChromeVisible = false
     }
 
@@ -229,16 +223,6 @@ struct ContentView: View {
         showChromeTemporarily()
     }
 
-    private func scheduleChromeDismissal() {
-        let dismissID = UUID()
-        chromeDismissID = dismissID
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(9))
-            guard chromeDismissID == dismissID else { return }
-            isChromeVisible = false
-        }
-    }
 }
 
 #Preview {
@@ -293,19 +277,9 @@ private struct MacPointerActionOverlay: View {
                                 placement: .bottom,
                                 action: showGuide
                             )
-                            .frame(maxWidth: .infinity)
+                            .frame(width: guideWidth(for: proxy.size.width))
 
-                            Color.clear
-                                .frame(width: playerControlsPassthroughWidth(for: proxy.size.width))
-                                .allowsHitTesting(false)
-
-                            MacPointerActionHotspot(
-                                title: "Guide",
-                                systemImage: "chevron.up",
-                                placement: .bottom,
-                                action: showGuide
-                            )
-                            .frame(maxWidth: .infinity)
+                            Spacer(minLength: 0)
                         }
                         .frame(height: bottomHeight(for: proxy.size.height))
                         .transition(.opacity)
@@ -325,8 +299,8 @@ private struct MacPointerActionOverlay: View {
         min(max(height * 0.12, 72), 116)
     }
 
-    private func playerControlsPassthroughWidth(for width: CGFloat) -> CGFloat {
-        min(max(width * 0.36, 420), 680)
+    private func guideWidth(for width: CGFloat) -> CGFloat {
+        min(max(width * 0.16, 178), 260)
     }
 }
 
@@ -632,29 +606,42 @@ private struct MiniGuideDetails: View {
     let channel: Channel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            items
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 18) {
+                HStack(alignment: .top, spacing: 18) {
+                    MiniGuideItem(title: "Now", value: channel.program.currentEventTitle)
+
+                    if let nextEventTitle = channel.program.nextEventTitle {
+                        MiniGuideItem(title: "Next", value: nextEventTitle)
+                    }
+                }
+
+                Spacer(minLength: 18)
+
+                MiniGuideItem(title: "Audio", value: channel.language, alignment: .trailing, maxWidth: 150)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                MiniGuideItem(title: "Now", value: channel.program.currentEventTitle, maxWidth: 460)
+
+                if let nextEventTitle = channel.program.nextEventTitle {
+                    MiniGuideItem(title: "Next", value: nextEventTitle, maxWidth: 460)
+                }
+
+                MiniGuideItem(title: "Audio", value: channel.language, maxWidth: 460)
+            }
         }
-    }
-
-    @ViewBuilder
-    private var items: some View {
-        MiniGuideItem(title: "Now", value: channel.program.currentEventTitle)
-
-        if let nextEventTitle = channel.program.nextEventTitle {
-            MiniGuideItem(title: "Next", value: nextEventTitle)
-        }
-
-        MiniGuideItem(title: "Audio", value: channel.language)
     }
 }
 
 private struct MiniGuideItem: View {
     let title: String
     let value: String
+    var alignment: HorizontalAlignment = .leading
+    var maxWidth: CGFloat = 220
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: alignment, spacing: 3) {
             Text(title)
                 .font(.caption2.weight(.heavy))
                 .foregroundStyle(.white.opacity(0.46))
@@ -666,7 +653,11 @@ private struct MiniGuideItem: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: 460, alignment: .leading)
+        .frame(maxWidth: maxWidth, alignment: frameAlignment)
+    }
+
+    private var frameAlignment: Alignment {
+        alignment == .trailing ? .trailing : .leading
     }
 }
 
