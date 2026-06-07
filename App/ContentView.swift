@@ -74,26 +74,18 @@ struct ContentView: View {
     }
 
     private var tvOverlay: some View {
-        ZStack(alignment: .topTrailing) {
-            SourceBadge(channel: selectedChannel, isCompact: !isChromeVisible)
+        VStack {
+            Spacer()
 
             if isChromeVisible {
-                VStack(alignment: .leading, spacing: 0) {
-                    TopChrome(channel: selectedChannel, channelCount: nativeChannels.count)
-
-                    Spacer()
-
-                    NowPlayingOverlay(channel: selectedChannel)
-                        .frame(maxWidth: 760, alignment: .leading)
-
-                    HorizontalGuide(
-                        groups: guideGroups,
-                        selectedGroupID: $selectedGuideGroupID,
-                        selectedChannelID: $selectedChannelID,
-                        focusedChannelID: $focusedChannelID
-                    )
-                    .padding(.top, 22)
-                }
+                ProgramDrawer(
+                    channel: selectedChannel,
+                    channelCount: nativeChannels.count,
+                    groups: guideGroups,
+                    selectedGroupID: $selectedGuideGroupID,
+                    selectedChannelID: $selectedChannelID,
+                    focusedChannelID: $focusedChannelID
+                )
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
@@ -101,24 +93,18 @@ struct ContentView: View {
     }
 
     private var compactOverlay: some View {
-        ZStack(alignment: .topTrailing) {
-            SourceBadge(channel: selectedChannel, isCompact: !isChromeVisible)
+        VStack {
+            Spacer()
 
             if isChromeVisible {
-                VStack(alignment: .leading, spacing: 14) {
-                    TopChrome(channel: selectedChannel, channelCount: nativeChannels.count)
-
-                    Spacer(minLength: 180)
-
-                    NowPlayingOverlay(channel: selectedChannel)
-
-                    HorizontalGuide(
-                        groups: guideGroups,
-                        selectedGroupID: $selectedGuideGroupID,
-                        selectedChannelID: $selectedChannelID,
-                        focusedChannelID: $focusedChannelID
-                    )
-                }
+                ProgramDrawer(
+                    channel: selectedChannel,
+                    channelCount: nativeChannels.count,
+                    groups: guideGroups,
+                    selectedGroupID: $selectedGuideGroupID,
+                    selectedChannelID: $selectedChannelID,
+                    focusedChannelID: $focusedChannelID
+                )
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
@@ -185,26 +171,76 @@ private enum ChannelNavigationDirection {
     case next
 }
 
-private struct TopChrome: View {
+private struct ProgramDrawer: View {
     let channel: Channel
     let channelCount: Int
+    let groups: [GuideGroup]
+    @Binding var selectedGroupID: String
+    @Binding var selectedChannelID: String
+    var focusedChannelID: FocusState<String?>.Binding
 
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .firstTextBaseline, spacing: 14) {
                 Text("Parliaments")
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
+                    .font(.caption.weight(.heavy))
+                    .foregroundStyle(.white.opacity(0.54))
+                    .textCase(.uppercase)
 
                 Text("\(channelCount) native sources")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.58))
+                    .foregroundStyle(.white.opacity(0.44))
+
+                Spacer(minLength: 20)
+
+                Label(channel.sourceQualityLabel, systemImage: "checkmark.seal")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white.opacity(0.74))
             }
 
-            Spacer()
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 26) {
+                    nowPlaying
 
-            SourceBadge(channel: channel, isCompact: false)
+                    Divider()
+                        .overlay(.white.opacity(0.18))
+
+                    guide
+                }
+
+                VStack(alignment: .leading, spacing: 18) {
+                    nowPlaying
+                    guide
+                }
+            }
         }
+        .padding(.horizontal, 26)
+        .padding(.top, 20)
+        .padding(.bottom, 24)
+        .background {
+            UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 8)
+                .fill(.black.opacity(0.70))
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(.white.opacity(0.10))
+                        .frame(height: 1)
+                }
+        }
+        .shadow(color: .black.opacity(0.36), radius: 22, y: -8)
+    }
+
+    private var nowPlaying: some View {
+        NowPlayingOverlay(channel: channel)
+            .frame(maxWidth: 520, alignment: .leading)
+    }
+
+    private var guide: some View {
+        HorizontalGuide(
+            groups: groups,
+            selectedGroupID: $selectedGroupID,
+            selectedChannelID: $selectedChannelID,
+            focusedChannelID: focusedChannelID
+        )
     }
 }
 
@@ -212,7 +248,7 @@ private struct NowPlayingOverlay: View {
     let channel: Channel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 10) {
@@ -231,15 +267,16 @@ private struct NowPlayingOverlay: View {
                 }
 
                 Text(channel.name)
-                    .font(.system(size: 44, weight: .bold))
+                    .font(.system(size: 38, weight: .bold))
                     .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(channel.program.currentEventTitle)
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.78))
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(channel.program.currentEventTime)
                     .font(.callout.weight(.medium))
@@ -249,7 +286,6 @@ private struct NowPlayingOverlay: View {
 
             MiniGuideDetails(channel: channel)
         }
-        .shadow(color: .black.opacity(0.45), radius: 12, y: 5)
     }
 }
 
@@ -299,21 +335,8 @@ private struct MiniGuideDetails: View {
     let channel: Channel
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 18) {
-                items
-            }
-
-            VStack(alignment: .leading, spacing: 9) {
-                items
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .background(.black.opacity(0.34), in: RoundedRectangle(cornerRadius: 8))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(.white.opacity(0.12), lineWidth: 1)
+        VStack(alignment: .leading, spacing: 10) {
+            items
         }
     }
 
@@ -343,9 +366,10 @@ private struct MiniGuideItem: View {
             Text(value)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.82))
-                .lineLimit(1)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: 180, alignment: .leading)
+        .frame(maxWidth: 460, alignment: .leading)
     }
 }
 
@@ -360,7 +384,7 @@ private struct HorizontalGuide: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             GuideGroupPicker(
                 groups: groups,
                 selectedGroupID: $selectedGroupID,
@@ -370,7 +394,7 @@ private struct HorizontalGuide: View {
 
             ScrollViewReader { proxy in
                 ScrollView(.horizontal) {
-                    LazyHStack(spacing: 10) {
+                    LazyHStack(spacing: 12) {
                         ForEach(selectedGroup.channels) { channel in
                             GuideChannelCard(
                                 channel: channel,
@@ -389,7 +413,7 @@ private struct HorizontalGuide: View {
                     .padding(.vertical, 4)
                 }
                 .scrollIndicators(.hidden)
-                .frame(height: 126)
+                .frame(height: 116)
                 .onChange(of: selectedChannelID) { _, newValue in
                     withAnimation(.snappy(duration: 0.22)) {
                         proxy.scrollTo(newValue, anchor: .center)
@@ -482,31 +506,22 @@ private struct GuideChannelCard: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(channel.name)
-                    .font(.caption.weight(.bold))
+                    .font(.callout.weight(.bold))
                     .foregroundStyle(isSelected ? .black : .white)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .frame(height: 17, alignment: .leading)
 
                 Text(channel.program.currentEventTitle)
-                    .font(.caption2.weight(.medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(isSelected ? .black.opacity(0.66) : .white.opacity(0.62))
-                    .lineLimit(1)
+                    .lineLimit(2)
                     .truncationMode(.tail)
-                    .frame(height: 15, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text(channel.countryOrRegion)
-                .font(.caption2.weight(.bold))
-                .foregroundStyle(isSelected ? .black.opacity(0.58) : .white.opacity(0.46))
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(height: 14, alignment: .leading)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 11)
-        .frame(width: 218, height: 108, alignment: .topLeading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(width: 270, height: 98, alignment: .topLeading)
         .clipped()
         .background(background, in: RoundedRectangle(cornerRadius: 8))
         .overlay {
@@ -525,53 +540,11 @@ private struct GuideChannelCard: View {
     }
 }
 
-private struct SourceBadge: View {
-    let channel: Channel
-    let isCompact: Bool
-
-    var body: some View {
-        Group {
-            if isCompact {
-                HStack(spacing: 7) {
-                    Image(systemName: "checkmark.seal")
-                    Text(channel.shortName)
-                }
-                .font(.caption.weight(.bold))
-            } else {
-                VStack(alignment: .trailing, spacing: 6) {
-                    Label(sourceLabel, systemImage: "checkmark.seal")
-                        .font(.caption.weight(.bold))
-
-                    Text(channel.legalReviewStatus)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.50))
-                        .lineLimit(1)
-                }
-            }
-        }
-        .foregroundStyle(.white.opacity(0.86))
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(.black.opacity(0.44), in: RoundedRectangle(cornerRadius: 7))
-        .animation(.easeInOut(duration: 0.20), value: isCompact)
-    }
-
-    private var sourceLabel: String {
-        channel.sourceQualityLabel
-    }
-}
-
 private struct VideoScrim: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [.black.opacity(0.58), .clear, .black.opacity(0.64)],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-
-            LinearGradient(
-                colors: [.black.opacity(0.52), .clear, .black.opacity(0.78)],
+                colors: [.clear, .clear, .black.opacity(0.70)],
                 startPoint: .top,
                 endPoint: .bottom
             )

@@ -117,6 +117,10 @@ official_url
 schedule_url
 terms_url
 attribution_text
+logo_asset_name
+logo_url
+brand_color
+logo_rights_status: unknown | official_mark | explicit_reuse_allowed | attribution_required | permission_required | avoid
 legal_review_status: not_reviewed | personal_use_only | noncommercial_with_attribution | explicit_reuse_allowed | embed_only | link_only | permission_required | avoid
 technical_status
 availability: 24_7 | sitting_only | event_based | unknown
@@ -297,6 +301,7 @@ Every channel must show:
 - Official page.
 - Terms status.
 - Attribution if required.
+- Logo/brand provenance when a logo is used.
 
 Default rules:
 
@@ -304,6 +309,8 @@ Default rules:
 - Do not proxy or rehost streams.
 - Do not strip watermarks.
 - Do not extract YouTube HLS.
+- Use official logos only when the source and reuse status are clear.
+- Keep channel text labels primary; logos are trust/provenance cues, not a substitute for accessible names.
 - Mark CPAC as `permission_required` or `personal_use_only` until reviewed.
 - Mark Quebec/Ontario as `noncommercial_with_attribution`.
 - Mark New Zealand and Brazil as high-confidence with conditions.
@@ -390,6 +397,7 @@ Next UI pass:
 Channel card should show:
 
 ```text
+Logo or fallback monogram
 Name
 Jurisdiction
 Live/off-air/unknown state
@@ -437,6 +445,7 @@ Channel surfing behavior:
 - Prevent tvOS focus underlay conflicts in the channel rail.
 - Ensure channel-card text cannot overflow at TV and phone sizes.
 - Add official link-out/source-detail mode.
+- Add optional logo/brand fields to the static channel catalogue with conservative rights status.
 - Test spike channel set on tvOS simulator/device and iOS simulator.
 
 ### Phase 3: Program metadata adapters
@@ -458,6 +467,7 @@ Channel surfing behavior:
 - Now/next overlay.
 - Compact on-player mini guide.
 - Source details overlay.
+- Official logo or fallback monogram on channel cards and source-detail surfaces when rights are clear.
 - Error/off-air/upcoming states.
 - Separate non-native sources from the main surf rail until playback is validated.
 
@@ -468,6 +478,7 @@ Channel surfing behavior:
 - Segment advancement checks.
 - Captions/audio language discovery.
 - Terms review pass.
+- Logo/brand asset review pass with provenance, accessibility labels, and fallbacks.
 - Add stretch channels.
 
 ### Phase 5b: Curated second ring
