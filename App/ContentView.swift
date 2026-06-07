@@ -335,12 +335,7 @@ private struct MacPointerActionHotspot: View {
             ZStack {
                 hoverFill
 
-                Label(title, systemImage: systemImage)
-                    .font(.callout.weight(.bold))
-                    .labelStyle(.iconOnly)
-                    .foregroundStyle(.white.opacity(isHovered ? 0.86 : 0.0))
-                    .padding(14)
-                    .background(.black.opacity(isHovered ? 0.30 : 0.0), in: Circle())
+                hotspotLabel
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: labelAlignment)
                     .padding(labelPadding)
             }
@@ -358,7 +353,31 @@ private struct MacPointerActionHotspot: View {
     private var hoverFill: some View {
         Rectangle()
             .fill(gradient)
-            .opacity(isHovered ? 1 : 0.02)
+            .opacity(isHovered ? 1 : restingFillOpacity)
+    }
+
+    @ViewBuilder
+    private var hotspotLabel: some View {
+        switch placement {
+        case .bottom:
+            Label(title, systemImage: systemImage)
+                .font(.callout.weight(.bold))
+                .foregroundStyle(.white.opacity(isHovered ? 0.90 : 0.56))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(.black.opacity(isHovered ? 0.34 : 0.18), in: Capsule())
+        case .left, .right:
+            Label(title, systemImage: systemImage)
+                .font(.callout.weight(.bold))
+                .labelStyle(.iconOnly)
+                .foregroundStyle(.white.opacity(isHovered ? 0.86 : 0.0))
+                .padding(14)
+                .background(.black.opacity(isHovered ? 0.30 : 0.0), in: Circle())
+        }
+    }
+
+    private var restingFillOpacity: Double {
+        placement == .bottom ? 0.08 : 0.02
     }
 
     private var gradient: LinearGradient {
