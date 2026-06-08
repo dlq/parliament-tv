@@ -500,6 +500,17 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 - Better off-air detection.
 - Segment advancement checks.
 - Captions/audio language discovery.
+- Apple framework review pass:
+  - `AVFoundation` / `AVKit` (macOS, iOS, tvOS): deepen playback diagnostics with access/error logs, media-selection groups, timed metadata, captions, audio-language discovery, PiP, and better live-state handling.
+  - `NaturalLanguage` (macOS, iOS, tvOS): lightweight language detection and title/label cleanup without requiring Apple Intelligence.
+  - `Translation` (macOS, iOS, tvOS in the installed SDK): consider optional title/summary translation for bilingual and international schedule metadata after source text is trustworthy.
+  - `Vision` (macOS, iOS, tvOS): consider OCR for bundled external-source screenshots or limited frame diagnostics, not as a primary schedule source.
+  - `Speech` (macOS, iOS, tvOS): treat live transcription/caption experiments as later research because cost, permissions, legal, and UX implications are higher.
+  - `AppIntents` (macOS, iOS, tvOS): later Shortcuts/Spotlight/Siri-style actions for opening pinned channels or source groups.
+  - `SwiftData` (macOS, iOS, tvOS): consider when pins, recent channels, user channel overrides, and validation history outgrow `UserDefaults`.
+  - `BackgroundTasks` (macOS, iOS, tvOS in the installed SDK): consider local refresh/validation where platform rules allow, but prefer server-side validation for durable source monitoring.
+  - `GroupActivities` / SharePlay (macOS, iOS, tvOS): later synchronized watching or shared civic-session viewing, not MVP.
+- Foundation Models review pass (macOS, iOS; not present as a tvOS framework in the installed Xcode 26.5 SDK): consider as an optional intelligence adapter for structured metadata extraction, verbose agenda summarization, title normalization, and source-state classification. Do not use it to invent schedule facts, validate officialness, or block the tvOS-first MVP path.
 - Terms review pass.
 - Logo/brand asset review pass with provenance, accessibility labels, and fallbacks.
 - Periodically refresh bundled 16:9 external-source page captures, especially YouTube/link-out previews; track capture date, source URL, and any consent/sign-in/cookie UI that appears in the screenshot.
