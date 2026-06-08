@@ -490,6 +490,7 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 - Source details overlay.
 - Follow up on macOS AVKit floating controls: the native rewind-side control cluster can show overlapping/conflicting icons in some windows. Keep floating controls for now, but test whether a custom control strip, inline controls with a separate guide affordance, or an AVKit workaround is the best fix.
 - Official logo or fallback monogram on channel cards and source-detail surfaces when rights are clear.
+- App icon / visual identity pass: defer final exploration until ImageGen is reliable again, then run the Product Design ideate workflow around the "Guide Chamber" direction. Avoid columns, domes, flags, coats of arms, seals, and official marks. Explore clean identity-grade icon studies based on parliamentary seating geometry, live video, and surfable guide semantics before committing an `AppIcon` asset.
 - Error/off-air/upcoming states.
 - Separate non-native sources from the main surf rail until playback is validated.
 
