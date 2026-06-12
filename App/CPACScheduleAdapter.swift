@@ -98,10 +98,17 @@ enum CPACScheduleAdapter {
 final class ProgramMetadataStore: ObservableObject {
     @Published private(set) var metadataByChannelID: [String: ProgramMetadata] = [:]
 
-    func refresh(channels: [Channel]) async {
+    private var lastScheduleRefreshBySource: [String: Date] = [:]
+    private let scheduleRefreshInterval: TimeInterval = 15 * 60
+
+    func refresh(channels: [Channel], selectedChannel: Channel) async {
         await refreshHLSFallbacks(channels: channels)
-        await refreshQuebec()
-        await refreshCPAC()
+        await refreshSchedule(for: selectedChannel)
+    }
+
+    func refreshSelectedChannel(_ channel: Channel) async {
+        await refreshHLSFallback(channel: channel)
+        await refreshSchedule(for: channel)
     }
 
     private func refreshHLSFallbacks(channels: [Channel]) async {
@@ -145,19 +152,129 @@ final class ProgramMetadataStore: ObservableObject {
         }
     }
 
-    private func refreshCPAC() async {
+    private func refreshHLSFallback(channel: Channel) async {
+        guard channel.sourceType == .directHLS, let playbackURL = channel.playbackURL else { return }
+
+        let checkedAt = Date()
         do {
-            let (data, _) = try await URLSession.shared.data(from: CPACScheduleAdapter.scheduleURL)
-            guard let html = String(data: data, encoding: .utf8) else { return }
-            if let metadata = CPACScheduleAdapter.programMetadata(from: html) {
-                metadataByChannelID[CPACScheduleAdapter.channelID] = metadata
-            }
+            var request = URLRequest(url: playbackURL)
+            request.timeoutInterval = 6
+            request.setValue("bytes=0-2047", forHTTPHeaderField: "Range")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let status = HLSProgramMetadataAdapter.status(from: data, response: response)
+            metadataByChannelID[channel.id] = HLSProgramMetadataAdapter.signalMetadata(
+                for: channel,
+                status: status,
+                checkedAt: checkedAt
+            )
         } catch {
-            // Keep the static catalogue metadata if the schedule page is unavailable.
+            metadataByChannelID[channel.id] = HLSProgramMetadataAdapter.signalMetadata(
+                for: channel,
+                status: .unavailable,
+                checkedAt: checkedAt
+            )
         }
     }
 
-    private func refreshQuebec() async {
+    private func refreshSchedule(for channel: Channel) async {
+        switch channel.id {
+        case CPACScheduleAdapter.channelID:
+            await refreshCPACIfNeeded()
+        case BrazilScheduleAdapter.channelID:
+            await refreshBrazilIfNeeded()
+        case NewZealandScheduleAdapter.channelID:
+            await refreshNewZealandIfNeeded()
+        case let id where id.hasPrefix("quebec-canal"):
+            await refreshQuebecIfNeeded()
+        case let id where id.hasPrefix("ontario-"):
+            await refreshOntarioIfNeeded()
+        default:
+            break
+        }
+    }
+
+    private func shouldRefreshSchedule(sourceID: String, now: Date = Date()) -> Bool {
+        guard let lastRefresh = lastScheduleRefreshBySource[sourceID] else { return true }
+        return now.timeIntervalSince(lastRefresh) >= scheduleRefreshInterval
+    }
+
+    private func markScheduleRefreshed(sourceID: String, at date: Date = Date()) {
+        lastScheduleRefreshBySource[sourceID] = date
+    }
+
+    private func refreshCPACIfNeeded() async {
+        let sourceID = "cpac"
+        guard shouldRefreshSchedule(sourceID: sourceID) else { return }
+        if await refreshCPAC() {
+            markScheduleRefreshed(sourceID: sourceID)
+        }
+    }
+
+    private func refreshQuebecIfNeeded() async {
+        let sourceID = "quebec"
+        guard shouldRefreshSchedule(sourceID: sourceID) else { return }
+        if await refreshQuebec() {
+            markScheduleRefreshed(sourceID: sourceID)
+        }
+    }
+
+    private func refreshBrazilIfNeeded() async {
+        let sourceID = "brazil"
+        guard shouldRefreshSchedule(sourceID: sourceID) else { return }
+        do {
+            let (data, _) = try await URLSession.shared.data(for: BrazilScheduleAdapter.request())
+            guard let html = String(data: data, encoding: .utf8) else { return }
+            guard let metadata = BrazilScheduleAdapter.programMetadata(from: html) else { return }
+            metadataByChannelID[BrazilScheduleAdapter.channelID] = metadata
+            markScheduleRefreshed(sourceID: sourceID)
+        } catch {
+            // Keep the HLS signal-state fallback if the schedule page is unavailable.
+        }
+    }
+
+    private func refreshNewZealandIfNeeded() async {
+        let sourceID = "new-zealand"
+        guard shouldRefreshSchedule(sourceID: sourceID) else { return }
+        do {
+            let (data, _) = try await URLSession.shared.data(for: NewZealandScheduleAdapter.request())
+            guard let html = String(data: data, encoding: .utf8) else { return }
+            guard let metadata = NewZealandScheduleAdapter.programMetadata(from: html) else { return }
+            metadataByChannelID[NewZealandScheduleAdapter.channelID] = metadata
+            markScheduleRefreshed(sourceID: sourceID)
+        } catch {
+            // Keep the HLS signal-state fallback if the calendar page is unavailable.
+        }
+    }
+
+    private func refreshOntarioIfNeeded() async {
+        let sourceID = "ontario"
+        guard shouldRefreshSchedule(sourceID: sourceID) else { return }
+        do {
+            let (data, _) = try await URLSession.shared.data(for: OntarioCalendarAdapter.request())
+            guard let html = String(data: data, encoding: .utf8) else { return }
+            let metadata = OntarioCalendarAdapter.programMetadataByChannelID(from: html)
+            guard !metadata.isEmpty else { return }
+            metadataByChannelID.merge(metadata) { _, new in new }
+            markScheduleRefreshed(sourceID: sourceID)
+        } catch {
+            // Keep the HLS signal-state fallback if the calendar page is unavailable.
+        }
+    }
+
+    private func refreshCPAC() async -> Bool {
+        do {
+            let (data, _) = try await URLSession.shared.data(from: CPACScheduleAdapter.scheduleURL)
+            guard let html = String(data: data, encoding: .utf8) else { return false }
+            guard let metadata = CPACScheduleAdapter.programMetadata(from: html) else { return false }
+            metadataByChannelID[CPACScheduleAdapter.channelID] = metadata
+            return true
+        } catch {
+            // Keep the static catalogue metadata if the schedule page is unavailable.
+            return false
+        }
+    }
+
+    private func refreshQuebec() async -> Bool {
         do {
             async let liveResult = URLSession.shared.data(for: QuebecWebdiffusionAdapter.request(for: QuebecWebdiffusionAdapter.liveURL))
             async let upcomingResult = URLSession.shared.data(for: QuebecWebdiffusionAdapter.request(for: QuebecWebdiffusionAdapter.upcomingURL))
@@ -166,9 +283,12 @@ final class ProgramMetadataStore: ObservableObject {
                 liveData: live.0,
                 upcomingData: upcoming.0
             )
+            guard !metadata.isEmpty else { return false }
             metadataByChannelID.merge(metadata) { _, new in new }
+            return true
         } catch {
             // Keep signal-state metadata if the Quebec schedule API is unavailable.
+            return false
         }
     }
 }

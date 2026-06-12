@@ -57,7 +57,7 @@ final class QuebecWebdiffusionAdapterTests: XCTestCase {
         let canal05 = try XCTUnwrap(metadata["quebec-canal05"])
         XCTAssertEqual(canal05.currentEventTitle, "Séance de l'Assemblée - Période de questions")
         XCTAssertEqual(canal05.currentEventTime, "Live now")
-        XCTAssertEqual(canal05.nextEventTitle, "Schedule unavailable")
+        XCTAssertNil(canal05.nextEventTitle)
         XCTAssertNil(canal05.nextEventTime)
         XCTAssertEqual(canal05.confidence, "Official live list")
     }

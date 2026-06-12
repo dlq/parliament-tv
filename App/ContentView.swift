@@ -14,6 +14,8 @@ struct ContentView: View {
     @State private var selectedChannelID = ChannelCatalog.channels[0].id
     @State private var selectedGuideGroupID = GuideGroup.pinnedID
     @State private var isChromeVisible = true
+    @State private var chromeVisibilityReason: ChromeVisibilityReason = .explicit
+    @State private var transientChromeHideTask: Task<Void, Never>?
     @State private var isInAppWebOverlayVisible = false
     @StateObject private var programMetadataStore = ProgramMetadataStore()
     @AppStorage("pinnedChannelIDs") private var pinnedChannelIDsStorage = GuideGroup.defaultPinnedChannelIDs.joined(separator: ",")
@@ -63,6 +65,7 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { proxy in
             let isCompact = proxy.size.width < 760
+            let isPhoneLandscape = proxy.size.width < 1_000 && proxy.size.height < 500
 
             ZStack {
                 PlayerSurface(
@@ -70,6 +73,10 @@ struct ContentView: View {
                     style: .fullBleed,
                     isInAppWebOverlayVisible: $isInAppWebOverlayVisible
                 )
+                    .channelSwipeNavigation(
+                        previous: selectPreviousChannel,
+                        next: selectNextChannel
+                    )
                     .ignoresSafeArea()
 
                 if isChromeVisible {
@@ -78,9 +85,9 @@ struct ContentView: View {
                         .transition(.opacity)
                 }
 
-                if isCompact {
-                    compactOverlay
-                        .padding(16)
+                if isPhoneLandscape || isCompact {
+                    compactOverlay(density: isPhoneLandscape ? .compactLandscape : .regular)
+                        .padding(isPhoneLandscape ? 10 : 16)
                 } else {
                     tvOverlay
                         .padding(.horizontal, 46)
@@ -88,6 +95,7 @@ struct ContentView: View {
                 }
 
                 macOSPointerActionOverlay
+                touchActionOverlay
             }
         }
         .remoteChannelNavigation(
@@ -102,8 +110,17 @@ struct ContentView: View {
             isCurrentChannelPinned: isSelectedChannelPinned
         )
         .macOSPlayerWindow()
+        .onAppear {
+            reconcileGuideSelection()
+        }
+        .onChange(of: pinnedChannelIDsStorage) { _, _ in
+            reconcileGuideSelection()
+        }
         .task {
-            await programMetadataStore.refresh(channels: channels)
+            await programMetadataStore.refresh(channels: channels, selectedChannel: selectedChannel)
+        }
+        .task(id: selectedChannelID) {
+            await programMetadataStore.refreshSelectedChannel(selectedChannel)
         }
     }
 
@@ -129,7 +146,7 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.22), value: isChromeVisible)
     }
 
-    private var compactOverlay: some View {
+    private func compactOverlay(density: ProgramDrawerDensity) -> some View {
         VStack {
             Spacer()
 
@@ -143,7 +160,8 @@ struct ContentView: View {
                     isChannelPinned: isSelectedChannelPinned,
                     togglePin: toggleSelectedChannelPin,
                     dismissGuide: hideChrome,
-                    focusedChannelID: $focusedChannelID
+                    focusedChannelID: $focusedChannelID,
+                    density: density
                 )
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
@@ -163,6 +181,18 @@ struct ContentView: View {
         #endif
     }
 
+    @ViewBuilder
+    private var touchActionOverlay: some View {
+        #if os(iOS)
+        TouchActionOverlay(
+            isGuideVisible: isChromeVisible || isInAppWebOverlayVisible,
+            showGuide: showChromeTemporarily,
+            previous: selectPreviousChannel,
+            next: selectNextChannel
+        )
+        #endif
+    }
+
     private func selectNextChannel() {
         selectAdjacentChannel(direction: .next)
     }
@@ -174,7 +204,7 @@ struct ContentView: View {
     private func selectAdjacentChannel(direction: ChannelNavigationDirection) {
         let groupChannels = selectedGuideGroup.id == GuideGroup.youtubeID ? selectedGuideGroup.channels : nativeSurfChannels
         guard let index = groupChannels.firstIndex(where: { $0.id == selectedChannelID }) else {
-            selectChannel(groupChannels[0])
+            selectChannelFromSurf(groupChannels[0])
             return
         }
 
@@ -185,24 +215,70 @@ struct ContentView: View {
             groupChannels.index(beforeWrapping: index)
         }
 
-        selectChannel(groupChannels[nextIndex])
+        selectChannelFromSurf(groupChannels[nextIndex])
     }
 
-    private func selectChannel(_ channel: Channel) {
+    private func selectChannelFromSurf(_ channel: Channel) {
+        let shouldKeepGuideOpen = isChromeVisible && chromeVisibilityReason == .explicit
+
         isInAppWebOverlayVisible = false
         selectedChannelID = channel.id
         if !selectedGuideGroup.channels.contains(channel) {
             selectedGuideGroupID = guideGroups.first { $0.channels.contains(channel) }?.id ?? selectedGuideGroupID
         }
         focusedChannelID = selectedChannelID
-        showChromeTemporarily()
+
+        if shouldKeepGuideOpen {
+            showGuide()
+        } else {
+            showChromeForSurfing()
+        }
+    }
+
+    private func reconcileGuideSelection() {
+        guard
+            !selectedGuideGroup.channels.contains(where: { $0.id == selectedChannelID }),
+            let selectedChannelGroup = guideGroups.first(where: { group in
+                group.channels.contains { $0.id == selectedChannelID }
+            })
+        else {
+            return
+        }
+
+        selectedGuideGroupID = selectedChannelGroup.id
     }
 
     private func showChromeTemporarily() {
+        showGuide()
+    }
+
+    private func showGuide() {
+        transientChromeHideTask?.cancel()
+        transientChromeHideTask = nil
+        chromeVisibilityReason = .explicit
         isChromeVisible = true
     }
 
+    private func showChromeForSurfing() {
+        transientChromeHideTask?.cancel()
+        chromeVisibilityReason = .channelSurf
+        isChromeVisible = true
+
+        transientChromeHideTask = Task {
+            try? await Task.sleep(for: .seconds(2.4))
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard chromeVisibilityReason == .channelSurf else { return }
+                isChromeVisible = false
+                transientChromeHideTask = nil
+            }
+        }
+    }
+
     private func hideChrome() {
+        transientChromeHideTask?.cancel()
+        transientChromeHideTask = nil
         isChromeVisible = false
     }
 
@@ -225,8 +301,40 @@ struct ContentView: View {
 
 }
 
+#if os(iOS)
+private extension View {
+    func channelSwipeNavigation(previous: @escaping () -> Void, next: @escaping () -> Void) -> some View {
+        gesture(
+            DragGesture(minimumDistance: 36)
+                .onEnded { value in
+                    let horizontal = value.translation.width
+                    let vertical = value.translation.height
+                    guard abs(horizontal) > 72, abs(horizontal) > abs(vertical) * 1.35 else { return }
+
+                    if horizontal < 0 {
+                        next()
+                    } else {
+                        previous()
+                    }
+                }
+        )
+    }
+}
+#else
+private extension View {
+    func channelSwipeNavigation(previous: @escaping () -> Void, next: @escaping () -> Void) -> some View {
+        self
+    }
+}
+#endif
+
 #Preview {
     ContentView()
+}
+
+private enum ChromeVisibilityReason {
+    case explicit
+    case channelSurf
 }
 
 private enum ChannelNavigationDirection {
@@ -244,26 +352,26 @@ private struct MacPointerActionOverlay: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                if !isGuideVisible {
-                    HStack(spacing: 0) {
-                        MacPointerActionHotspot(
-                            title: "Previous",
-                            systemImage: "chevron.left",
-                            placement: .left,
-                            action: previous
-                        )
-                        .frame(width: sideWidth(for: proxy.size.width))
+                HStack(spacing: 0) {
+                    MacPointerActionHotspot(
+                        title: "Previous",
+                        systemImage: "chevron.left",
+                        placement: .left,
+                        isGuideVisible: isGuideVisible,
+                        action: previous
+                    )
+                    .frame(width: sideWidth(for: proxy.size.width, isGuideVisible: isGuideVisible))
 
-                        Spacer(minLength: 0)
+                    Spacer(minLength: 0)
 
-                        MacPointerActionHotspot(
-                            title: "Next",
-                            systemImage: "chevron.right",
-                            placement: .right,
-                            action: next
-                        )
-                        .frame(width: sideWidth(for: proxy.size.width))
-                    }
+                    MacPointerActionHotspot(
+                        title: "Next",
+                        systemImage: "chevron.right",
+                        placement: .right,
+                        isGuideVisible: isGuideVisible,
+                        action: next
+                    )
+                    .frame(width: sideWidth(for: proxy.size.width, isGuideVisible: isGuideVisible))
                 }
 
                 VStack(spacing: 0) {
@@ -275,6 +383,7 @@ private struct MacPointerActionOverlay: View {
                                 title: "Guide",
                                 systemImage: "chevron.up",
                                 placement: .bottom,
+                                isGuideVisible: isGuideVisible,
                                 action: showGuide
                             )
                             .frame(width: guideWidth(for: proxy.size.width))
@@ -291,8 +400,12 @@ private struct MacPointerActionOverlay: View {
         .ignoresSafeArea()
     }
 
-    private func sideWidth(for width: CGFloat) -> CGFloat {
-        min(max(width * 0.08, 74), 128)
+    private func sideWidth(for width: CGFloat, isGuideVisible: Bool) -> CGFloat {
+        if isGuideVisible {
+            return min(max(width * 0.028, 42), 56)
+        }
+
+        return min(max(width * 0.08, 74), 128)
     }
 
     private func bottomHeight(for height: CGFloat) -> CGFloat {
@@ -308,6 +421,7 @@ private struct MacPointerActionHotspot: View {
     let title: String
     let systemImage: String
     let placement: Placement
+    var isGuideVisible = false
     let action: () -> Void
 
     @State private var isHovered = false
@@ -350,16 +464,36 @@ private struct MacPointerActionHotspot: View {
                 .background(.black.opacity(isHovered ? 0.34 : 0.18), in: Capsule())
         case .left, .right:
             Label(title, systemImage: systemImage)
-                .font(.callout.weight(.bold))
+                .font((isGuideVisible ? Font.caption : Font.callout).weight(.bold))
                 .labelStyle(.iconOnly)
-                .foregroundStyle(.white.opacity(isHovered ? 0.86 : 0.0))
-                .padding(14)
-                .background(.black.opacity(isHovered ? 0.30 : 0.0), in: Circle())
+                .foregroundStyle(.white.opacity(sideIconOpacity))
+                .padding(isGuideVisible ? 9 : 14)
+                .background(.black.opacity(sideIconBackgroundOpacity), in: Circle())
         }
     }
 
     private var restingFillOpacity: Double {
-        placement == .bottom ? 0.08 : 0.02
+        if placement == .bottom {
+            return 0.08
+        }
+
+        return isGuideVisible ? 0.0 : 0.02
+    }
+
+    private var sideIconOpacity: Double {
+        if isHovered {
+            return 0.86
+        }
+
+        return isGuideVisible ? 0.38 : 0.0
+    }
+
+    private var sideIconBackgroundOpacity: Double {
+        if isHovered {
+            return 0.30
+        }
+
+        return isGuideVisible ? 0.16 : 0.0
     }
 
     private var gradient: LinearGradient {
@@ -399,9 +533,9 @@ private struct MacPointerActionHotspot: View {
     private var labelPadding: EdgeInsets {
         switch placement {
         case .left:
-            EdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 0)
+            EdgeInsets(top: 0, leading: isGuideVisible ? 6 : 18, bottom: 0, trailing: 0)
         case .right:
-            EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 18)
+            EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: isGuideVisible ? 6 : 18)
         case .bottom:
             EdgeInsets(top: 0, leading: 0, bottom: 18, trailing: 0)
         }
@@ -415,418 +549,170 @@ private struct MacPointerActionHotspot: View {
 }
 #endif
 
-private struct ProgramDrawer: View {
-    let channel: Channel
-    let channelCount: Int
-    let groups: [GuideGroup]
-    @Binding var selectedGroupID: String
-    @Binding var selectedChannelID: String
-    let isChannelPinned: Bool
-    let togglePin: () -> Void
-    let dismissGuide: () -> Void
-    var focusedChannelID: FocusState<String?>.Binding
+#if os(iOS)
+private struct TouchActionOverlay: View {
+    let isGuideVisible: Bool
+    let showGuide: () -> Void
+    let previous: () -> Void
+    let next: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Button(action: dismissGuide) {
-                Capsule()
-                    .fill(.white.opacity(0.34))
-                    .frame(width: 66, height: 6)
-                .frame(width: 104, height: 24)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .help("Hide guide")
+        GeometryReader { proxy in
+            ZStack {
+                HStack(spacing: 0) {
+                    TouchActionHotspot(
+                        title: "Previous",
+                        systemImage: "chevron.left",
+                        placement: .left,
+                        isGuideVisible: isGuideVisible,
+                        action: previous
+                    )
+                    .frame(width: sideWidth(for: proxy.size.width, isGuideVisible: isGuideVisible))
 
-            HStack(alignment: .firstTextBaseline, spacing: 14) {
-                Text("Parliaments")
-                    .font(.caption.weight(.heavy))
-                    .foregroundStyle(.white.opacity(0.54))
-                    .textCase(.uppercase)
+                    Spacer(minLength: 0)
 
-                Text("\(channelCount) native sources")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.44))
-
-                Spacer(minLength: 20)
-
-                Label(channel.sourceQualityLabel, systemImage: "checkmark.seal")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.white.opacity(0.74))
-
-                if channel.displayMode == .nativePlayer {
-                    Button(action: togglePin) {
-                        Label(isChannelPinned ? "Unpin channel" : "Pin channel", systemImage: isChannelPinned ? "pin.fill" : "pin")
-                            .labelStyle(.iconOnly)
-                    }
-                    .buttonStyle(.plain)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(isChannelPinned ? .black : .white.opacity(0.78))
-                    .padding(8)
-                    .background(isChannelPinned ? .white : .white.opacity(0.14), in: RoundedRectangle(cornerRadius: 6))
-                    .help(isChannelPinned ? "Unpin channel" : "Pin channel")
-                }
-            }
-
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .top, spacing: 26) {
-                    nowPlaying
-
-                    Divider()
-                        .overlay(.white.opacity(0.18))
-
-                    guide
+                    TouchActionHotspot(
+                        title: "Next",
+                        systemImage: "chevron.right",
+                        placement: .right,
+                        isGuideVisible: isGuideVisible,
+                        action: next
+                    )
+                    .frame(width: sideWidth(for: proxy.size.width, isGuideVisible: isGuideVisible))
                 }
 
-                VStack(alignment: .leading, spacing: 18) {
-                    nowPlaying
-                    guide
-                }
-            }
-        }
-        .padding(.horizontal, 26)
-        .padding(.top, 20)
-        .padding(.bottom, 24)
-        .background {
-            UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 8)
-                .fill(.black.opacity(0.70))
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .fill(.white.opacity(0.10))
-                        .frame(height: 1)
-                }
-        }
-        .shadow(color: .black.opacity(0.36), radius: 22, y: -8)
-    }
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
 
-    private var nowPlaying: some View {
-        NowPlayingOverlay(channel: channel)
-            .frame(maxWidth: 520, alignment: .leading)
-    }
-
-    private var guide: some View {
-        HorizontalGuide(
-            groups: groups,
-            selectedGroupID: $selectedGroupID,
-            selectedChannelID: $selectedChannelID,
-            focusedChannelID: focusedChannelID
-        )
-    }
-}
-
-private struct NowPlayingOverlay: View {
-    let channel: Channel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 8) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 10) {
-                        ChannelCodePill(channel: channel)
-                        LiveStatePill(channel: channel)
-                        SourceQualityPill(channel: channel)
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        ChannelCodePill(channel: channel)
-                        HStack(spacing: 8) {
-                            LiveStatePill(channel: channel)
-                            SourceQualityPill(channel: channel)
-                        }
-                    }
-                }
-
-                Text(channel.name)
-                    .font(.system(size: 38, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(channel.program.currentEventTitle)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.78))
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(channel.program.currentEventTime)
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.58))
-                    .lineLimit(1)
-            }
-
-            MiniGuideDetails(channel: channel)
-        }
-    }
-}
-
-private struct ChannelCodePill: View {
-    let channel: Channel
-
-    var body: some View {
-        Text(channel.channelCode)
-            .font(.headline.weight(.heavy))
-            .foregroundStyle(.black)
-            .lineLimit(1)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(.white, in: RoundedRectangle(cornerRadius: 5))
-    }
-}
-
-private struct LiveStatePill: View {
-    let channel: Channel
-
-    var body: some View {
-        Label(channel.liveStateLabel, systemImage: channel.liveStateIcon)
-            .font(.caption.weight(.bold))
-            .foregroundStyle(.white.opacity(0.90))
-            .lineLimit(1)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 5))
-    }
-}
-
-private struct SourceQualityPill: View {
-    let channel: Channel
-
-    var body: some View {
-        Text(channel.sourceQualityLabel)
-            .font(.caption.weight(.bold))
-            .foregroundStyle(.white.opacity(0.78))
-            .lineLimit(1)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(.black.opacity(0.34), in: RoundedRectangle(cornerRadius: 5))
-    }
-}
-
-private struct MiniGuideDetails: View {
-    let channel: Channel
-
-    var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 18) {
-                HStack(alignment: .top, spacing: 18) {
-                    MiniGuideItem(title: "Now", value: channel.program.currentEventTitle)
-
-                    if let nextEventTitle = channel.program.nextEventTitle {
-                        MiniGuideItem(title: "Next", value: nextEventTitle)
-                    }
-                }
-
-                Spacer(minLength: 18)
-
-                MiniGuideItem(title: "Audio", value: channel.language, alignment: .trailing, maxWidth: 150)
-            }
-
-            VStack(alignment: .leading, spacing: 10) {
-                MiniGuideItem(title: "Now", value: channel.program.currentEventTitle, maxWidth: 460)
-
-                if let nextEventTitle = channel.program.nextEventTitle {
-                    MiniGuideItem(title: "Next", value: nextEventTitle, maxWidth: 460)
-                }
-
-                MiniGuideItem(title: "Audio", value: channel.language, maxWidth: 460)
-            }
-        }
-    }
-}
-
-private struct MiniGuideItem: View {
-    let title: String
-    let value: String
-    var alignment: HorizontalAlignment = .leading
-    var maxWidth: CGFloat = 220
-
-    var body: some View {
-        VStack(alignment: alignment, spacing: 3) {
-            Text(title)
-                .font(.caption2.weight(.heavy))
-                .foregroundStyle(.white.opacity(0.46))
-                .textCase(.uppercase)
-
-            Text(value)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.82))
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: maxWidth, alignment: frameAlignment)
-    }
-
-    private var frameAlignment: Alignment {
-        alignment == .trailing ? .trailing : .leading
-    }
-}
-
-private struct HorizontalGuide: View {
-    let groups: [GuideGroup]
-    @Binding var selectedGroupID: String
-    @Binding var selectedChannelID: String
-    var focusedChannelID: FocusState<String?>.Binding
-
-    private var selectedGroup: GuideGroup {
-        groups.first { $0.id == selectedGroupID } ?? groups[0]
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            GuideGroupPicker(
-                groups: groups,
-                selectedGroupID: $selectedGroupID,
-                selectedChannelID: $selectedChannelID,
-                focusedChannelID: focusedChannelID
-            )
-
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(selectedGroup.channels) { channel in
-                            GuideChannelCard(
-                                channel: channel,
-                                isSelected: channel.id == selectedChannelID
+                    if !isGuideVisible {
+                        HStack(spacing: 0) {
+                            TouchActionHotspot(
+                                title: "Guide",
+                                systemImage: "chevron.up",
+                                placement: .bottom,
+                                action: showGuide
                             )
-                            .focused(focusedChannelID, equals: channel.id)
-                            .focusable(false)
-                            .onTapGesture {
-                                selectedChannelID = channel.id
-                                focusedChannelID.wrappedValue = channel.id
-                            }
-                            .id(channel.id)
+                            .frame(width: guideWidth(for: proxy.size.width))
+
+                            Spacer(minLength: 0)
                         }
-                    }
-                    .padding(.horizontal, 2)
-                    .padding(.vertical, 4)
-                }
-                .scrollIndicators(.hidden)
-                .frame(height: 116)
-                .onChange(of: selectedChannelID) { _, newValue in
-                    withAnimation(.snappy(duration: 0.22)) {
-                        proxy.scrollTo(newValue, anchor: .center)
-                    }
-                }
-                .onChange(of: selectedGroupID) { _, _ in
-                    withAnimation(.snappy(duration: 0.22)) {
-                        proxy.scrollTo(selectedChannelID, anchor: .center)
+                        .frame(height: bottomHeight(for: proxy.size.height))
+                        .transition(.opacity)
                     }
                 }
             }
+            .animation(.easeInOut(duration: 0.18), value: isGuideVisible)
         }
+        .ignoresSafeArea()
+    }
+
+    private func sideWidth(for width: CGFloat, isGuideVisible: Bool) -> CGFloat {
+        return min(max(width * 0.10, 88), 142)
+    }
+
+    private func bottomHeight(for height: CGFloat) -> CGFloat {
+        min(max(height * 0.12, 72), 116)
+    }
+
+    private func guideWidth(for width: CGFloat) -> CGFloat {
+        min(max(width * 0.20, 178), 280)
     }
 }
 
-private struct GuideGroupPicker: View {
-    let groups: [GuideGroup]
-    @Binding var selectedGroupID: String
-    @Binding var selectedChannelID: String
-    var focusedChannelID: FocusState<String?>.Binding
+private struct TouchActionHotspot: View {
+    let title: String
+    let systemImage: String
+    let placement: Placement
+    var isGuideVisible = false
+    let action: () -> Void
 
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                ForEach(groups) { group in
-                    GuideGroupPill(group: group, isSelected: group.id == selectedGroupID)
-                        .onTapGesture {
-                            selectedGroupID = group.id
-                            if let firstChannel = group.channels.first {
-                                selectedChannelID = firstChannel.id
-                                focusedChannelID.wrappedValue = firstChannel.id
-                            }
-                        }
-                }
+        Button(action: action) {
+            ZStack {
+                gradient
+
+                hotspotLabel
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: labelAlignment)
+                    .padding(labelPadding)
             }
-            .padding(.horizontal, 2)
-            .padding(.vertical, 2)
         }
-        .scrollIndicators(.hidden)
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .accessibilityLabel(title)
+    }
+
+    @ViewBuilder
+    private var hotspotLabel: some View {
+        switch placement {
+        case .bottom:
+            Label(title, systemImage: systemImage)
+                .font(.callout.weight(.bold))
+                .foregroundStyle(.white.opacity(0.84))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(.black.opacity(0.30), in: Capsule())
+        case .left, .right:
+            Label(title, systemImage: systemImage)
+                .font(.callout.weight(.bold))
+                .labelStyle(.iconOnly)
+                .foregroundStyle(.white.opacity(0.46))
+                .padding(14)
+                .background(.black.opacity(0.18), in: Circle())
+        }
+    }
+
+    private var gradient: LinearGradient {
+        switch placement {
+        case .left:
+            LinearGradient(
+                colors: [.black.opacity(0.12), .clear],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        case .right:
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.12)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        case .bottom:
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.18)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+
+    private var labelAlignment: Alignment {
+        switch placement {
+        case .left:
+            .leading
+        case .right:
+            .trailing
+        case .bottom:
+            .bottomLeading
+        }
+    }
+
+    private var labelPadding: EdgeInsets {
+        switch placement {
+        case .left:
+            EdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 0)
+        case .right:
+            EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 18)
+        case .bottom:
+            EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 0)
+        }
+    }
+
+    enum Placement {
+        case left
+        case right
+        case bottom
     }
 }
-
-private struct GuideGroupPill: View {
-    let group: GuideGroup
-    let isSelected: Bool
-
-    var body: some View {
-        HStack(spacing: 7) {
-            Image(systemName: group.systemImage)
-                .font(.caption.weight(.bold))
-
-            Text(group.title)
-                .font(.caption.weight(.heavy))
-
-            Text(group.countLabel)
-                .font(.caption2.weight(.heavy))
-                .foregroundStyle(isSelected ? .black.opacity(0.62) : .white.opacity(0.50))
-        }
-        .foregroundStyle(isSelected ? .black : .white.opacity(0.84))
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(isSelected ? .white : .black.opacity(0.42), in: RoundedRectangle(cornerRadius: 8))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(.white.opacity(isSelected ? 0.85 : 0.12), lineWidth: 1)
-        }
-        .contentShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
-
-private struct GuideChannelCard: View {
-    let channel: Channel
-    let isSelected: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(channel.channelCode)
-                    .font(.headline.weight(.heavy))
-                    .foregroundStyle(isSelected ? .black : .white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-
-                Spacer()
-
-                Image(systemName: statusIcon)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(isSelected ? .black.opacity(0.72) : .cyan)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(channel.name)
-                    .font(.callout.weight(.bold))
-                    .foregroundStyle(isSelected ? .black : .white)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Text(channel.program.currentEventTitle)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(isSelected ? .black.opacity(0.66) : .white.opacity(0.62))
-                    .lineLimit(2)
-                    .truncationMode(.tail)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(width: 270, height: 98, alignment: .topLeading)
-        .clipped()
-        .background(background, in: RoundedRectangle(cornerRadius: 8))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(isSelected ? .white.opacity(0.85) : .white.opacity(0.12), lineWidth: 1)
-        }
-        .contentShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var background: Color {
-        isSelected ? .white : Color.black.opacity(0.46)
-    }
-
-    private var statusIcon: String {
-        channel.liveStateIcon
-    }
-}
+#endif
 
 private struct VideoScrim: View {
     var body: some View {

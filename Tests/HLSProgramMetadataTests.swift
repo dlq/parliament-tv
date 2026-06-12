@@ -19,7 +19,7 @@ final class HLSProgramMetadataTests: XCTestCase {
 
             XCTAssertEqual(metadata.currentEventTitle, "Signal available, program unknown", channel.id)
             XCTAssertEqual(metadata.currentEventTime, "Checked 10:30 AM ET", channel.id)
-            XCTAssertEqual(metadata.nextEventTitle, "Schedule unavailable", channel.id)
+            XCTAssertNil(metadata.nextEventTitle, channel.id)
             XCTAssertNil(metadata.nextEventTime, channel.id)
             XCTAssertEqual(metadata.confidence, "Signal", channel.id)
         }

@@ -30,7 +30,7 @@ enum QuebecWebdiffusionAdapter {
             metadataByChannelID[channelID] = ProgramMetadata(
                 currentEventTitle: cleanText(item.titre),
                 currentEventTime: "Live now",
-                nextEventTitle: next?.title ?? "Schedule unavailable",
+                nextEventTitle: next?.title,
                 nextEventTime: next?.time,
                 confidence: "Official live list"
             )
@@ -57,7 +57,7 @@ enum QuebecWebdiffusionAdapter {
         let metadata = ProgramMetadata(
             currentEventTitle: "No live webcast listed",
             currentEventTime: "Checked \(timeLabel(for: checkedAt, timeZone: displayTimeZone))",
-            nextEventTitle: next == nil ? "Schedule unavailable" : "Next listed Quebec webcast",
+            nextEventTitle: next == nil ? nil : "Next listed Quebec webcast",
             nextEventTime: next?.time,
             confidence: next == nil ? "Official live list" : "Official source schedule"
         )

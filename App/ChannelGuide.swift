@@ -117,11 +117,11 @@ extension Channel {
         case .alwaysOn:
             return "Live"
         case .sittingOnly:
-            return "Next sitting"
+            return "Sitting feed"
         case .eventBased:
-            return "Event based"
+            return "Event feed"
         case .unknown:
-            return "Schedule unavailable"
+            return "Signal only"
         }
     }
 

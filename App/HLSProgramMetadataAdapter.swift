@@ -17,7 +17,7 @@ enum HLSProgramMetadataAdapter {
             ProgramMetadata(
                 currentEventTitle: "Signal available, program unknown",
                 currentEventTime: "Checked \(timeLabel(for: checkedAt, timeZone: displayTimeZone))",
-                nextEventTitle: "Schedule unavailable",
+                nextEventTitle: nil,
                 nextEventTime: nil,
                 confidence: "Signal"
             )
@@ -25,7 +25,7 @@ enum HLSProgramMetadataAdapter {
             ProgramMetadata(
                 currentEventTitle: "No signal",
                 currentEventTime: "Checked \(timeLabel(for: checkedAt, timeZone: displayTimeZone))",
-                nextEventTitle: nextLabel(for: channel),
+                nextEventTitle: nil,
                 nextEventTime: nil,
                 confidence: "Signal"
             )
@@ -49,19 +49,6 @@ enum HLSProgramMetadataAdapter {
         }
 
         return body.contains("#EXTM3U") ? .available : .unavailable
-    }
-
-    private nonisolated static func nextLabel(for channel: Channel) -> String {
-        switch channel.availability {
-        case .alwaysOn:
-            "Retry stream"
-        case .sittingOnly:
-            "Next sitting unknown"
-        case .eventBased:
-            "Next event unknown"
-        case .unknown:
-            "Schedule unavailable"
-        }
     }
 
     private nonisolated static func timeLabel(for date: Date, timeZone: TimeZone) -> String {
