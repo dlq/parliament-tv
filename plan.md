@@ -488,6 +488,7 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 - Now/next overlay.
 - Compact on-player mini guide.
 - Source details overlay.
+- Lazy HLS frame previews in guide cards: prototype `AVAssetImageGenerator` frame grabs for visible/focused native HLS cards only, cache by channel ID, limit concurrency to 1-2 requests, time out quickly, cancel/deprioritize when the guide closes or group changes, and keep text-only cards as the fallback for off-air or unsupported streams.
 - Follow up on macOS AVKit floating controls: the native rewind-side control cluster can show overlapping/conflicting icons in some windows. Keep floating controls for now, but test whether a custom control strip, inline controls with a separate guide affordance, or an AVKit workaround is the best fix.
 - Official logo or fallback monogram on channel cards and source-detail surfaces when rights are clear.
 - App icon / visual identity pass: defer final exploration until ImageGen is reliable again, then run the Product Design ideate workflow around the "Guide Chamber" direction. Avoid columns, domes, flags, coats of arms, seals, and official marks. Explore clean identity-grade icon studies based on parliamentary seating geometry, live video, and surfable guide semantics before committing an `AppIcon` asset.

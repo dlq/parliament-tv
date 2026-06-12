@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Guide Chamber opposing benches app icon concept">
+  <defs>
+    <linearGradient id="bg" x1="124" y1="72" x2="900" y2="952" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111923"/>
+      <stop offset="1" stop-color="#05070b"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <g fill="none" stroke-linecap="round" filter="url(#softShadow)">
+    <path d="M 224 332 C 332 290 430 290 512 330" stroke="#f6efe2" stroke-width="36" stroke-dasharray="40 30"/>
+    <path d="M 800 332 C 692 290 594 290 512 330" stroke="#f6efe2" stroke-width="36" stroke-dasharray="40 30"/>
+    <path d="M 194 436 C 320 382 430 386 512 438" stroke="#e4d6bb" stroke-width="34" stroke-dasharray="38 30" opacity="0.94"/>
+    <path d="M 830 436 C 704 382 594 386 512 438" stroke="#e4d6bb" stroke-width="34" stroke-dasharray="38 30" opacity="0.94"/>
+    <path d="M 180 548 C 306 494 426 498 512 548" stroke="#ba9a55" stroke-width="32" stroke-dasharray="34 32"/>
+    <path d="M 844 548 C 718 494 598 498 512 548" stroke="#ba9a55" stroke-width="32" stroke-dasharray="34 32"/>
+    <path d="M 192 664 C 320 608 430 614 512 666" stroke="#f6efe2" stroke-width="24" stroke-dasharray="26 34" opacity="0.56"/>
+    <path d="M 832 664 C 704 608 594 614 512 666" stroke="#f6efe2" stroke-width="24" stroke-dasharray="26 34" opacity="0.56"/>
+  </g>
+  <path d="M 512 288 L 512 760" stroke="#2f3e4d" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
+  <rect x="398" y="612" width="228" height="146" rx="50" fill="#111923" stroke="#394858" stroke-width="6"/>
+  <path d="M 478 648 L 478 722 L 556 685 Z" fill="#e4473f"/>
+  <rect x="274" y="766" width="476" height="28" rx="14" fill="#e4473f" opacity="0.88"/>
+</svg>
