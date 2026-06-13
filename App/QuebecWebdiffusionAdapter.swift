@@ -34,7 +34,7 @@ enum QuebecWebdiffusionAdapter {
         currentEventTime: "Live now",
         nextEventTitle: next?.title,
         nextEventTime: next?.time,
-        confidence: "Official live list"
+        confidence: .officialLiveList
       )
     }
 
@@ -61,7 +61,7 @@ enum QuebecWebdiffusionAdapter {
       currentEventTime: "Checked \(timeLabel(for: checkedAt, timeZone: displayTimeZone))",
       nextEventTitle: next == nil ? nil : "Next listed Quebec webcast",
       nextEventTime: next?.time,
-      confidence: next == nil ? "Official live list" : "Official source schedule"
+      confidence: next == nil ? .officialLiveList : .officialSourceSchedule
     )
 
     return Dictionary(

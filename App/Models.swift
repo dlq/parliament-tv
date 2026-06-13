@@ -72,6 +72,68 @@ enum TechnicalStatus: String {
   }
 }
 
+enum LegalReviewStatus: String {
+  case personalUsePendingReview
+  case explicitReuseWithConditions
+  case noncommercialPendingReview
+  case embedOnly
+
+  var label: String {
+    switch self {
+    case .personalUsePendingReview: "Personal use only until reviewed"
+    case .explicitReuseWithConditions: "Explicit reuse allowed with conditions"
+    case .noncommercialPendingReview: "Noncommercial/personal use until reviewed"
+    case .embedOnly: "Embed only"
+    }
+  }
+}
+
+enum MetadataLevel: String {
+  case signalStateOnly
+  case scheduleTarget
+  case agendaTarget
+  case dailyScheduleTarget
+  case currentEventTarget
+  case currentAndNextEventTarget
+  case youtubeCurrentEventTarget
+
+  var label: String {
+    switch self {
+    case .signalStateOnly: "Signal state only"
+    case .scheduleTarget: "Schedule target"
+    case .agendaTarget: "Agenda target"
+    case .dailyScheduleTarget: "Daily schedule target"
+    case .currentEventTarget: "Current event target"
+    case .currentAndNextEventTarget: "Current and next event target"
+    case .youtubeCurrentEventTarget: "YouTube current event target"
+    }
+  }
+}
+
+enum ProgramConfidence: Hashable {
+  case low
+  case medium
+  case high
+  case signal
+  case officialCalendar
+  case officialWeeklySchedule
+  case officialLiveList
+  case officialSourceSchedule
+
+  var label: String {
+    switch self {
+    case .low: "Low"
+    case .medium: "Medium"
+    case .high: "High"
+    case .signal: "Signal"
+    case .officialCalendar: "Official calendar"
+    case .officialWeeklySchedule: "Official weekly schedule"
+    case .officialLiveList: "Official live list"
+    case .officialSourceSchedule: "Official source schedule"
+    }
+  }
+}
+
 struct Channel: Identifiable, Hashable {
   let id: String
   let name: String
@@ -85,10 +147,10 @@ struct Channel: Identifiable, Hashable {
   let playbackURL: URL?
   let officialURL: URL
   let attributionText: String
-  let legalReviewStatus: String
+  let legalReviewStatus: LegalReviewStatus
   let technicalStatus: TechnicalStatus
   let availability: Availability
-  let metadataLevel: String
+  let metadataLevel: MetadataLevel
   let previewAssetName: String?
   let program: ProgramMetadata
 }
@@ -98,7 +160,7 @@ struct ProgramMetadata: Hashable {
   let currentEventTime: String
   let nextEventTitle: String?
   let nextEventTime: String?
-  let confidence: String
+  let confidence: ProgramConfidence
 }
 
 extension Channel {

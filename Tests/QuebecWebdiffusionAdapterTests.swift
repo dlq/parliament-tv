@@ -30,7 +30,7 @@ final class QuebecWebdiffusionAdapterTests: XCTestCase {
     XCTAssertEqual(canal02.currentEventTime, "Checked 5:31 PM ET")
     XCTAssertEqual(canal02.nextEventTitle, "Next listed Quebec webcast")
     XCTAssertEqual(canal02.nextEventTime, "8 juin 2026, Début vers 12 h 30 jusqu'à 18 h")
-    XCTAssertEqual(canal02.confidence, "Official source schedule")
+    XCTAssertEqual(canal02.confidence, .officialSourceSchedule)
   }
 
   func testMapsLiveMetadataToChannelFromSignalURL() throws {
@@ -60,6 +60,6 @@ final class QuebecWebdiffusionAdapterTests: XCTestCase {
     XCTAssertEqual(canal05.currentEventTime, "Live now")
     XCTAssertNil(canal05.nextEventTitle)
     XCTAssertNil(canal05.nextEventTime)
-    XCTAssertEqual(canal05.confidence, "Official live list")
+    XCTAssertEqual(canal05.confidence, .officialLiveList)
   }
 }

@@ -36,7 +36,7 @@ final class BrazilScheduleAdapterTests: XCTestCase {
     XCTAssertEqual(
       metadata.nextEventTitle, "Câmara Debate: Regulamentação da Inteligência Artificial")
     XCTAssertEqual(metadata.nextEventTime, "1:00 PM ET")
-    XCTAssertEqual(metadata.confidence, "Official weekly schedule")
+    XCTAssertEqual(metadata.confidence, .officialWeeklySchedule)
   }
 
   func testPrefersActiveDayTabWhenWeeklyPageContainsMultipleDays() throws {

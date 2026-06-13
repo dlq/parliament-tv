@@ -33,7 +33,7 @@ enum CPACScheduleAdapter {
       currentEventTime: timeRange(start: current.start, end: currentEnd, timeZone: displayTimeZone),
       nextEventTitle: next?.title,
       nextEventTime: next.map { timeLabel(for: $0.start, timeZone: displayTimeZone) },
-      confidence: "High"
+      confidence: .high
     )
   }
 

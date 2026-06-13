@@ -46,14 +46,14 @@ enum ChannelCatalog {
       "https://cpac-ca-live.cdn.vustreams.com/groupa/live/f9809cea-1e07-47cd-a94d-2ddd3e1351db/live.isml/.m3u8",
     officialURL: "https://www.cpac.ca/en/",
     attributionText: "Official CPAC stream endpoint discovered from CPAC metadata.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .alwaysOn,
-    metadataLevel: "Daily schedule target",
+    metadataLevel: .dailyScheduleTarget,
     currentEventTitle: "Live public affairs feed",
     currentEventTime: "Schedule integration pending",
     nextEventTitle: "Daily schedule metadata",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let newZealand = directChannel(
@@ -67,14 +67,14 @@ enum ChannelCatalog {
     playbackURL: "https://ptvlive.kordia.net.nz/out/v1/daf20b9a9ec5449dadd734e50ce52b74/index.m3u8",
     officialURL: "https://www.parliament.nz/en/watch-parliament/",
     attributionText: "Official Parliament TV HLS candidate; pair with sitting calendar.",
-    legalReviewStatus: "Explicit reuse allowed with conditions",
+    legalReviewStatus: .explicitReuseWithConditions,
     availability: .sittingOnly,
-    metadataLevel: "Current and next event target",
+    metadataLevel: .currentAndNextEventTarget,
     currentEventTitle: "Parliament TV",
     currentEventTime: "Live during House sittings",
     nextEventTitle: "Sitting calendar integration",
     nextEventTime: "Planned",
-    confidence: "High"
+    confidence: .high
   )
 
   private static let brazil = directChannel(
@@ -89,14 +89,14 @@ enum ChannelCatalog {
     officialURL: "https://www.camara.leg.br/tv/",
     attributionText:
       "Official TV Camara stream; source attribution and watermark integrity matter.",
-    legalReviewStatus: "Explicit reuse allowed with conditions",
+    legalReviewStatus: .explicitReuseWithConditions,
     availability: .alwaysOn,
-    metadataLevel: "Daily schedule target",
+    metadataLevel: .dailyScheduleTarget,
     currentEventTitle: "TV Camara live",
     currentEventTime: "Official live channel",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "High"
+    confidence: .high
   )
 
   private static let denmark = directChannel(
@@ -111,14 +111,14 @@ enum ChannelCatalog {
       "https://cdnapi.kaltura.com/p/2158211/sp/327418300/playManifest/entryId/1_24gfa7qq/protocol/https/format/applehttp/a.m3u8",
     officialURL: "https://www.ft.dk/",
     attributionText: "Official player HLS candidate; terms still need deeper review.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Folketinget live stream",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let netherlands = directChannel(
@@ -133,14 +133,14 @@ enum ChannelCatalog {
       "https://livestreaming.b67buv2.tweedekamer.nl/live/plenairezaal/index.m3u8?hd=1&keyframes=1&subtitles=live",
     officialURL: "https://www.tweedekamer.nl/debat_en_vergadering/livedebat",
     attributionText: "Official Tweede Kamer live room stream.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Plenary hall live stream",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let spain = directChannel(
@@ -155,14 +155,14 @@ enum ChannelCatalog {
       "https://congresodirecto.akamaized.net/hls/live/2037973/canalparlamento/master.m3u8",
     officialURL: "https://www.congreso.es/",
     attributionText: "Official Congreso/Canal Parlamento HLS candidate.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Canal Parlamento",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let france = directChannel(
@@ -176,14 +176,14 @@ enum ChannelCatalog {
     playbackURL: "https://assemblee-nationale.akamaized.net/live/live36/stream36.m3u8",
     officialURL: "https://videos.assemblee-nationale.fr/direct.php",
     attributionText: "Official National Assembly video portal HLS stream.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "National Assembly live stream",
     currentEventTime: "Active around public sittings and meetings",
     nextEventTitle: "Official video portal schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let portugal = directChannel(
@@ -198,14 +198,14 @@ enum ChannelCatalog {
       "https://playout172.livextend.cloud/liveiframe/_definst_/liveartvabr/playlist.m3u8",
     officialURL: "https://www.parlamento.pt/",
     attributionText: "Canal Parlamento HLS candidate; pair with official agenda metadata.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Agenda target",
+    metadataLevel: .agendaTarget,
     currentEventTitle: "ARTV Canal Parlamento",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official agenda integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let greece = directChannel(
@@ -220,14 +220,14 @@ enum ChannelCatalog {
     officialURL: "https://www.hellenicparliament.gr/",
     attributionText:
       "Hellenic Parliament TV HLS candidate distributed through public broadcaster infrastructure.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .alwaysOn,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Hellenic Parliament TV",
     currentEventTime: "Official parliamentary TV feed",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let luxembourg = directChannel(
@@ -241,14 +241,14 @@ enum ChannelCatalog {
     playbackURL: "https://media02.webtvlive.eu/chd-edge/smil:chamber_tv_hd.smil/playlist.m3u8",
     officialURL: "https://www.chd.lu/",
     attributionText: "Chamber TV HLS candidate from official player infrastructure.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Chamber TV",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let italySenate = directChannel(
@@ -262,14 +262,14 @@ enum ChannelCatalog {
     playbackURL: "https://senato-live.morescreens.com/SENATO_1_001/playlist.m3u8",
     officialURL: "https://webtv.senato.it/",
     attributionText: "Senate live HLS candidate; official source and terms need deeper review.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Senate live stream",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let indiaSansad1 = directChannel(
@@ -284,14 +284,14 @@ enum ChannelCatalog {
       "https://d2lk5u59tns74c.cloudfront.net/out/v1/fff8f20221d5456e8922e689d71dedc3/index.m3u8",
     officialURL: "https://sansadtv.nic.in/",
     attributionText: "Sansad TV HLS candidate; terms and reliability require review.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .alwaysOn,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Sansad TV feed 1",
     currentEventTime: "Official parliamentary television feed",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let indiaSansad2 = directChannel(
@@ -306,14 +306,14 @@ enum ChannelCatalog {
       "https://d2lk5u59tns74c.cloudfront.net/out/v1/e4182054dce340da9e0ff38b6b3658a4/index.m3u8",
     officialURL: "https://sansadtv.nic.in/",
     attributionText: "Sansad TV HLS candidate; terms and reliability require review.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .alwaysOn,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Sansad TV feed 2",
     currentEventTime: "Official parliamentary television feed",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let thailand = directChannel(
@@ -327,14 +327,14 @@ enum ChannelCatalog {
     playbackURL: "https://tv-live.tpchannel.org/live/tv.m3u8",
     officialURL: "https://tpchannel.org/",
     attributionText: "Thai Parliament TV HLS candidate; terms and reliability require review.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .alwaysOn,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "Thai Parliament TV",
     currentEventTime: "Official parliamentary television feed",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Medium"
+    confidence: .medium
   )
 
   private static let slovakia = directChannel(
@@ -349,14 +349,14 @@ enum ChannelCatalog {
     officialURL: "https://www.nrsr.sk/",
     attributionText:
       "Parliamentary/public-broadcaster HLS candidate; source ownership needs review.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Schedule target",
+    metadataLevel: .scheduleTarget,
     currentEventTitle: "TV NRSR",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official schedule integration",
     nextEventTime: "Planned",
-    confidence: "Low"
+    confidence: .low
   )
 
   private static let mongolia = directDashChannel(
@@ -371,14 +371,14 @@ enum ChannelCatalog {
     officialURL: "https://www.parliament.mn/",
     attributionText:
       "SkyGo DASH distribution candidate for parliamentary television; ownership and terms need review.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .alwaysOn,
-    metadataLevel: "Signal state only",
+    metadataLevel: .signalStateOnly,
     currentEventTitle: "Parliament TV DASH stream",
     currentEventTime: "macOS playback experiment",
     nextEventTitle: "Official source review",
     nextEventTime: "Planned",
-    confidence: "Low"
+    confidence: .low
   )
 
   private static let quebecChannels: [Channel] = (1...14).map { channelNumber in
@@ -395,15 +395,15 @@ enum ChannelCatalog {
         "https://cdn3.wowza.com/5/SVEySlNEQ0FOWXlS/diffusion/canal\(channel)/playlist.m3u8",
       officialURL: "https://www.assnat.qc.ca/fr/video-audio/en-direct-webdiffusion.html",
       attributionText: "Official-vendor HLS from the Assembly live-list flow.",
-      legalReviewStatus: "Noncommercial/personal use until reviewed",
+      legalReviewStatus: .noncommercialPendingReview,
       availability: .eventBased,
-      metadataLevel: "Current event target",
+      metadataLevel: .currentEventTarget,
       currentEventTitle: channelNumber == 5 || channelNumber == 6 || channelNumber == 14
         ? "Recently active Assembly webcast channel" : "Assembly webcast channel",
       currentEventTime: "Active when proceedings are scheduled",
       nextEventTitle: "Live-list API metadata",
       nextEventTime: "Planned",
-      confidence: channelNumber == 5 || channelNumber == 6 || channelNumber == 14 ? "Medium" : "Low"
+      confidence: channelNumber == 5 || channelNumber == 6 || channelNumber == 14 ? .medium : .low
     )
   }
 
@@ -445,14 +445,14 @@ enum ChannelCatalog {
         "https://origin-http-delivery.isilive.ca/live/_definst_/ontla/\(streamName)/playlist.m3u8",
       officialURL: "https://www.ola.org/en/legislative-business/video",
       attributionText: "Official-vendor HLS for the Legislative Assembly video service.",
-      legalReviewStatus: "Noncommercial/personal use until reviewed",
+      legalReviewStatus: .noncommercialPendingReview,
       availability: streamName.contains("house") ? .sittingOnly : .eventBased,
-      metadataLevel: "Current and next event target",
+      metadataLevel: .currentAndNextEventTarget,
       currentEventTitle: currentTitle,
       currentEventTime: "Live during sittings or scheduled events",
       nextEventTitle: "OLA calendar integration",
       nextEventTime: "Planned",
-      confidence: "Medium"
+      confidence: .medium
     )
   }
 
@@ -467,14 +467,14 @@ enum ChannelCatalog {
     playbackURL: "https://temp2.isilive.ca/live/nunavut/live-eng/index.m3u8",
     officialURL: "https://assembly.nu.ca/",
     attributionText: "iSi LIVE HLS candidate; official page and terms still need confirmation.",
-    legalReviewStatus: "Personal use only until reviewed",
+    legalReviewStatus: .personalUsePendingReview,
     availability: .eventBased,
-    metadataLevel: "Signal state only",
+    metadataLevel: .signalStateOnly,
     currentEventTitle: "Legislative Assembly TV",
     currentEventTime: "Active around scheduled proceedings",
     nextEventTitle: "Official source and schedule review",
     nextEventTime: "Planned",
-    confidence: "Low"
+    confidence: .low
   )
 
   static let sourcesRequiringExternalPlayer: [Channel] = [
@@ -489,13 +489,13 @@ enum ChannelCatalog {
       sourceType: .youtube,
       officialURL: "https://www.youtube.com/UKParliament",
       attributionText: "Selected live events and clips.",
-      legalReviewStatus: "Embed only",
+      legalReviewStatus: .embedOnly,
       technicalStatus: .linkOnly,
-      metadataLevel: "YouTube current event target",
+      metadataLevel: .youtubeCurrentEventTarget,
       currentEventTitle: "Channel page",
       currentEventTime: "Open for selected live streams",
       previewAssetName: "UKParliamentYouTubePreview",
-      confidence: "High"
+      confidence: .high
     ),
     linkOutChannel(
       id: "australia-parliament-youtube",
@@ -508,13 +508,13 @@ enum ChannelCatalog {
       sourceType: .youtube,
       officialURL: "https://www.youtube.com/@AUSParliamentLive",
       attributionText: "Live events hosted outside the native player.",
-      legalReviewStatus: "Embed only",
+      legalReviewStatus: .embedOnly,
       technicalStatus: .linkOnly,
-      metadataLevel: "YouTube current event target",
+      metadataLevel: .youtubeCurrentEventTarget,
       currentEventTitle: "Channel page",
       currentEventTime: "Open for active streams",
       previewAssetName: "AustraliaParliamentYouTubePreview",
-      confidence: "Medium"
+      confidence: .medium
     ),
     linkOutChannel(
       id: "taiwan-parliamentary-tv-youtube",
@@ -527,13 +527,13 @@ enum ChannelCatalog {
       sourceType: .youtube,
       officialURL: "https://www.parliamentarytv.org.tw/",
       attributionText: "Live portal with channels and meeting playlists.",
-      legalReviewStatus: "Embed only",
+      legalReviewStatus: .embedOnly,
       technicalStatus: .linkOnly,
-      metadataLevel: "YouTube current event target",
+      metadataLevel: .youtubeCurrentEventTarget,
       currentEventTitle: "Live portal",
       currentEventTime: "Open for active streams",
       previewAssetName: "TaiwanParliamentaryTVPreview",
-      confidence: "Medium"
+      confidence: .medium
     ),
     linkOutChannel(
       id: "costa-rica-assembly-youtube",
@@ -546,13 +546,13 @@ enum ChannelCatalog {
       sourceType: .youtube,
       officialURL: "https://www.youtube.com/@AsambleaCRC",
       attributionText: "Live and recorded Assembly proceedings.",
-      legalReviewStatus: "Embed only",
+      legalReviewStatus: .embedOnly,
       technicalStatus: .linkOnly,
-      metadataLevel: "YouTube current event target",
+      metadataLevel: .youtubeCurrentEventTarget,
       currentEventTitle: "Channel page",
       currentEventTime: "Open for active streams",
       previewAssetName: "CostaRicaAssemblyYouTubePreview",
-      confidence: "Medium"
+      confidence: .medium
     ),
   ]
 
@@ -567,14 +567,14 @@ enum ChannelCatalog {
     playbackURL: String,
     officialURL: String,
     attributionText: String,
-    legalReviewStatus: String,
+    legalReviewStatus: LegalReviewStatus,
     availability: Availability,
-    metadataLevel: String,
+    metadataLevel: MetadataLevel,
     currentEventTitle: String,
     currentEventTime: String,
     nextEventTitle: String?,
     nextEventTime: String?,
-    confidence: String
+    confidence: ProgramConfidence
   ) -> Channel {
     Channel(
       id: id,
@@ -615,14 +615,14 @@ enum ChannelCatalog {
     playbackURL: String,
     officialURL: String,
     attributionText: String,
-    legalReviewStatus: String,
+    legalReviewStatus: LegalReviewStatus,
     availability: Availability,
-    metadataLevel: String,
+    metadataLevel: MetadataLevel,
     currentEventTitle: String,
     currentEventTime: String,
     nextEventTitle: String?,
     nextEventTime: String?,
-    confidence: String
+    confidence: ProgramConfidence
   ) -> Channel {
     Channel(
       id: id,
@@ -663,13 +663,13 @@ enum ChannelCatalog {
     sourceType: SourceType,
     officialURL: String,
     attributionText: String,
-    legalReviewStatus: String,
+    legalReviewStatus: LegalReviewStatus,
     technicalStatus: TechnicalStatus,
-    metadataLevel: String,
+    metadataLevel: MetadataLevel,
     currentEventTitle: String,
     currentEventTime: String,
     previewAssetName: String?,
-    confidence: String
+    confidence: ProgramConfidence
   ) -> Channel {
     Channel(
       id: id,

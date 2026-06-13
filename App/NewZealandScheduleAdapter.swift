@@ -37,7 +37,7 @@ enum NewZealandScheduleAdapter {
         "Checked \(ScheduleTextHelpers.timeLabel(for: checkedAt, timeZone: displayTimeZone))",
       nextEventTitle: "House next meets",
       nextEventTime: nextText,
-      confidence: "Official calendar"
+      confidence: .officialCalendar
     )
   }
 }

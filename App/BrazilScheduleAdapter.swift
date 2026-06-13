@@ -43,7 +43,7 @@ enum BrazilScheduleAdapter {
       nextEventTime: next.map {
         ScheduleTextHelpers.timeLabel(for: $0.start, timeZone: displayTimeZone)
       },
-      confidence: "Official weekly schedule"
+      confidence: .officialWeeklySchedule
     )
   }
 

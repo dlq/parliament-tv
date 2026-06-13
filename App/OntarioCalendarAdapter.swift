@@ -25,7 +25,7 @@ enum OntarioCalendarAdapter {
             "Checked \(ScheduleTextHelpers.timeLabel(for: now, timeZone: displayTimeZone))",
           nextEventTitle: nil,
           nextEventTime: nil,
-          confidence: "Official calendar"
+          confidence: .officialCalendar
         )
         return Dictionary(uniqueKeysWithValues: channelIDs.map { ($0, metadata) })
       }
@@ -51,7 +51,7 @@ enum OntarioCalendarAdapter {
       nextEventTime: next.map {
         ScheduleTextHelpers.timeLabel(for: $0.start, timeZone: displayTimeZone)
       },
-      confidence: "Official calendar"
+      confidence: .officialCalendar
     )
 
     return Dictionary(uniqueKeysWithValues: channelIDs.map { ($0, metadata) })

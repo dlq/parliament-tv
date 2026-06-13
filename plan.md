@@ -432,49 +432,58 @@ Channel surfing behavior:
 
 ### Phase 1: Data and validator
 
-- Create static channel catalogue.
-- Add direct HLS validator.
-- Add metadata placeholders.
-- Validate MVP direct streams.
+- Done: static Swift seed catalogue for native HLS/DASH experiments and external YouTube/link-out sources.
+- Done: initial direct-HLS validation and MVP stream triage.
+- Done: placeholder program metadata is represented as typed `ProgramMetadata` rather than unstructured UI copy.
+- Done: channel metadata now uses typed `LegalReviewStatus`, `MetadataLevel`, and `ProgramConfidence` enums.
+- Remaining: keep periodic validation on the roadmap so stale feeds are detected outside manual simulator testing.
 
 ### Phase 2: Playback spike
 
-- Build minimal SwiftUI/tvOS player view.
-- Add AVPlayer playback for direct HLS.
-- Add channel rail and remote next/previous.
-- Auto-resume playback on channel changes.
-- Prevent tvOS focus underlay conflicts in the channel rail.
-- Ensure channel-card text cannot overflow at TV and phone sizes.
-- Add official link-out/source-detail mode.
-- Add optional logo/brand fields to the static channel catalogue with conservative rights status.
-- Test spike channel set on tvOS simulator/device and iOS simulator.
+- Done: SwiftUI playback shell works across macOS, iOS/iPadOS, and tvOS.
+- Done: direct HLS uses AVPlayer/AVKit; macOS-only DASH experiment uses a web-backed player path.
+- Done: channel groups, guide drawer, previous/next controls, swipe navigation on touch platforms, remote navigation, and macOS menu/keyboard commands are wired.
+- Done: playback resumes on channel changes and guide-triggered versus surf-triggered chrome behavior is split.
+- Done: guide cards have bounded text, compact phone landscape density, and platform-aware action overlays.
+- Done: official link-out/source-detail mode supports bundled 16:9 preview captures and an experimental macOS in-app web view for YouTube-like sources.
+- Done: app icon assets are present.
+- Remaining: run periodic device/simulator visual checks as the UI changes, especially tvOS focus, iPad size classes, iPhone landscape, and macOS window controls.
 
 ### Phase 2b: Structure checkpoint
 
-Before adding more channels, logos, or metadata adapters, clean up the prototype structure so the app remains easy to iterate:
+Current state:
 
-- Split the current large SwiftUI surface into focused files: player screen, program drawer, guide rail, guide cards, and small status/pill components.
-- Make channel selection a single explicit action path so remote navigation, guide taps, focus updates, playback resume, and chrome reveal stay consistent.
-- Keep grouping, channel-code, source-label, and live-state logic outside SwiftUI views with focused tests.
-- Convert loose channel metadata strings such as legal review status, metadata level, and confidence into enums before the catalogue grows.
-- Decide whether the static catalogue should remain Swift seed data or move to a JSON/YAML resource before adding second-ring channels.
+- Done: `ContentView` is now primarily orchestration/state, with platform action overlays, navigation modifiers, guide rail/cards, link-out surfaces, platform players, window configuration, and collection helpers split into focused files.
+- Done: `ProgramDrawer` composes `ChannelGuideRail` rather than owning the guide-group picker and channel-card implementation inline.
+- Done: `PlayerSurface` owns signal/playback state while platform-specific AVKit/DASH bridges and link-out/web surfaces live in separate files.
+- Done: guide taps and guide-group changes use explicit channel-selection callbacks instead of mutating the selected channel binding from deep guide views.
+- Done: grouping, channel code, source-label, live-state, typed metadata, and catalogue display behavior have focused unit coverage in `ChannelGuideTests`.
+- Done: loose metadata strings for legal review status, metadata level, and confidence have been converted to enums.
+- Done: verification currently runs whitespace checks, `swift-format` lint, macOS tests, iPhone simulator build, iPad simulator build, and tvOS simulator build through `Scripts/verify.sh`.
+- Decision for the current prototype: keep the catalogue as Swift seed data while source validation and typed metadata are still changing quickly. Revisit JSON/YAML once second-ring channels, logo provenance, and schedule-adapter mappings stabilize enough to benefit from data-only edits.
+
+Remaining structure follow-ups:
+
+- Keep extracting only when a file starts carrying multiple responsibilities again; avoid abstraction for its own sake.
+- Consider a small persistence boundary before custom pins, recent channels, validation history, or user channel overrides grow beyond `AppStorage`.
+- Add UI smoke tests for opening the guide, changing channels, hiding the guide, and checking compact phone landscape behavior.
 
 ### Phase 3: Program metadata adapters
 
-- CPAC schedule adapter: daily TV-style schedule, now/next overlay, timezone handling.
-- Quebec webdiffusion adapter: current live list plus upcoming webdiffusions.
-- UK Parliamentlive Guide adapter: day guide, event details, room/chamber labels, agenda items.
-- New Zealand calendar adapter: House next-meeting state, sitting programme, calendar rows.
-- Ontario calendar adapter: House/committee calendar and stream-room mapping.
-- Brazil TV Camara weekly schedule adapter: time/program rows and `AO VIVO` labels.
+- Done: CPAC schedule adapter maps daily TV-style schedule rows into now/next metadata with timezone handling.
+- Done: Quebec webdiffusion adapter maps current live-list/upcoming metadata into current/next channel metadata.
+- Done: New Zealand calendar adapter maps House next-meeting state into channel metadata.
+- Done: Ontario calendar adapter maps House/committee calendar events to the known Ontario streams.
+- Done: Brazil TV Camara weekly schedule adapter maps time/program rows and `AO VIVO` labels.
+- Remaining: UK Parliamentlive Guide adapter: day guide, event details, room/chamber labels, agenda items.
 - European Parliament webstreaming adapter: extract official Multimedia Centre REST calls before implementation.
 - YouTube live/current adapter for official YouTube fallbacks.
 
 Near-term direct-HLS schedule-adapter order:
 
-1. Brazil TV Camara: easiest next schedule source; official weekly HTML tables include time/program rows and `AO VIVO` labels.
-2. New Zealand Parliament TV: pair the validated HLS feed with official calendar, sitting programme, and "House next meets" state.
-3. Ontario Legislative Assembly: high-value local source; map House/committee calendar events to `house-en`, `rm151-en`, `committee_1-en`, `committee_2-en`, and media streams during a sitting-day test.
+1. UK Parliamentlive Guide: highest-value missing official schedule adapter for an existing external source.
+2. European Parliament webstreaming: extract official Multimedia Centre REST calls before implementation.
+3. YouTube live/current adapter: useful for the YouTube group, but keep it separate from native surf behavior.
 4. Spain Congreso / Canal Parlamento: official programming pages look scrapeable, but Liferay/portal HTML adds mechanical friction.
 5. Portugal ARTV: promising official agenda/export source, but likely needs session, XSRF, or structured-export handling before it is quick to implement.
 
@@ -531,6 +540,26 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 - Logo/brand asset review pass with provenance, accessibility labels, and fallbacks.
 - Periodically refresh bundled 16:9 external-source page captures, especially YouTube/link-out previews; track capture date, source URL, and any consent/sign-in/cookie UI that appears in the screenshot.
 - Add stretch channels.
+
+### Phase 5a: Public repository readiness
+
+Current public-facing baseline:
+
+- Done: add `README.md` with prototype scope, platform targets, build/test commands, non-affiliation language, and source/rights cautions.
+- Done: add MIT `LICENSE` for project code.
+- Done: add `docs/sources-and-provenance.md` to separate code licensing from stream/source/page-capture/design-asset rights.
+- Done: add `CONTRIBUTING.md` with required evidence for source and stream corrections.
+- Done: add `PRIVACY.md` describing the current local-only/no-analytics prototype posture.
+- Done: add `docs/open-parliament-streams.md` as a placeholder sketch for the later public catalogue/advocacy repository.
+- Done: add a conservative GitHub Actions workflow for `swift-format` lint and macOS tests.
+- Done: mark `research.md` as a working research log rather than an endorsed public stream directory.
+- Done: remove generated icon concept exploration assets from the public repository baseline.
+- Done: add fresh macOS, iPhone, iPadOS, and tvOS screenshots to the README.
+
+Remaining before making the repo highly presentable:
+
+- Consider adding a short demo GIF after the UI has a stable public-facing state.
+- Keep contribution and privacy notes current as network behavior, persistence, or validation tooling changes.
 
 ### Phase 5b: Curated second ring
 

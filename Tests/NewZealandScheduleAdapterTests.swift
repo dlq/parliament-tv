@@ -22,6 +22,6 @@ final class NewZealandScheduleAdapterTests: XCTestCase {
     XCTAssertEqual(metadata.currentEventTime, "Checked 1:00 PM ET")
     XCTAssertEqual(metadata.nextEventTitle, "House next meets")
     XCTAssertEqual(metadata.nextEventTime, "Tuesday, 16 June 2026 at 2:00 PM.")
-    XCTAssertEqual(metadata.confidence, "Official calendar")
+    XCTAssertEqual(metadata.confidence, .officialCalendar)
   }
 }

@@ -1,5 +1,7 @@
 # Parliamentary open-stream research
 
+This is a working research log, not an endorsed stream directory or legal assessment. It includes successful checks, failed checks, stale candidates, third-party references, and notes that require revalidation before reuse in a public catalogue, app release, or advocacy material.
+
 Date researched: 2026-05-12  
 Goal: determine whether an app can flip between publicly available, open streams of parliamentary activity around the world, with initial coverage across national, sub-national, and supra-national legislatures.
 

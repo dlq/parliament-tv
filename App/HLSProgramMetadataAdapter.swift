@@ -19,7 +19,7 @@ enum HLSProgramMetadataAdapter {
         currentEventTime: "Checked \(timeLabel(for: checkedAt, timeZone: displayTimeZone))",
         nextEventTitle: nil,
         nextEventTime: nil,
-        confidence: "Signal"
+        confidence: .signal
       )
     case .unavailable:
       ProgramMetadata(
@@ -27,7 +27,7 @@ enum HLSProgramMetadataAdapter {
         currentEventTime: "Checked \(timeLabel(for: checkedAt, timeZone: displayTimeZone))",
         nextEventTitle: nil,
         nextEventTime: nil,
-        confidence: "Signal"
+        confidence: .signal
       )
     }
   }

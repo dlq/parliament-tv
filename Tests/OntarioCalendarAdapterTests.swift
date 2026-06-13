@@ -27,7 +27,7 @@ final class OntarioCalendarAdapterTests: XCTestCase {
     XCTAssertEqual(
       house.nextEventTitle, "Standing Committee on Finance and Economic Affairs - Room 151")
     XCTAssertEqual(house.nextEventTime, "1:00 PM ET")
-    XCTAssertEqual(house.confidence, "Official calendar")
+    XCTAssertEqual(house.confidence, .officialCalendar)
 
     let room151 = try XCTUnwrap(metadata["ontario-rm151-en"])
     XCTAssertEqual(room151.currentEventTitle, "House proceedings")
@@ -48,6 +48,6 @@ final class OntarioCalendarAdapterTests: XCTestCase {
     XCTAssertEqual(house.currentEventTime, "Checked 1:30 PM ET")
     XCTAssertNil(house.nextEventTitle)
     XCTAssertNil(house.nextEventTime)
-    XCTAssertEqual(house.confidence, "Official calendar")
+    XCTAssertEqual(house.confidence, .officialCalendar)
   }
 }

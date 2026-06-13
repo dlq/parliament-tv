@@ -82,6 +82,43 @@ final class ChannelGuideTests: XCTestCase {
     XCTAssertEqual(channelsByID["costa-rica-assembly-youtube"]?.channelCode, "904 CR")
   }
 
+  func testChannelDisplayLabelsMatchSourceAndAvailability() throws {
+    let cpac = try XCTUnwrap(ChannelCatalog.channels.first { $0.id == "cpac-ca" })
+    XCTAssertEqual(cpac.liveStateLabel, "Live")
+    XCTAssertEqual(cpac.liveStateIcon, "dot.radiowaves.left.and.right")
+    XCTAssertEqual(cpac.sourceQualityLabel, "Official HLS")
+
+    let newZealand = try XCTUnwrap(
+      ChannelCatalog.channels.first { $0.id == "new-zealand-parliament" })
+    XCTAssertEqual(newZealand.liveStateLabel, "Sitting feed")
+    XCTAssertEqual(newZealand.liveStateIcon, "calendar")
+
+    let quebec = try XCTUnwrap(ChannelCatalog.channels.first { $0.id == "quebec-canal01" })
+    XCTAssertEqual(quebec.liveStateLabel, "Event feed")
+    XCTAssertEqual(quebec.liveStateIcon, "calendar.badge.clock")
+
+    let youtube = try XCTUnwrap(
+      ChannelCatalog.sourcesRequiringExternalPlayer.first { $0.id == "uk-parliament-youtube" })
+    XCTAssertEqual(youtube.liveStateLabel, "YouTube")
+    XCTAssertEqual(youtube.liveStateIcon, "arrow.up.forward.square")
+    XCTAssertEqual(youtube.sourceQualityLabel, "YouTube")
+  }
+
+  func testCatalogueMetadataUsesTypedLabels() throws {
+    let cpac = try XCTUnwrap(ChannelCatalog.channels.first { $0.id == "cpac-ca" })
+    XCTAssertEqual(cpac.legalReviewStatus, .personalUsePendingReview)
+    XCTAssertEqual(cpac.legalReviewStatus.label, "Personal use only until reviewed")
+    XCTAssertEqual(cpac.metadataLevel, .dailyScheduleTarget)
+    XCTAssertEqual(cpac.metadataLevel.label, "Daily schedule target")
+    XCTAssertEqual(cpac.program.confidence, .medium)
+    XCTAssertEqual(cpac.program.confidence.label, "Medium")
+
+    let youtube = try XCTUnwrap(
+      ChannelCatalog.sourcesRequiringExternalPlayer.first { $0.id == "uk-parliament-youtube" })
+    XCTAssertEqual(youtube.legalReviewStatus, .embedOnly)
+    XCTAssertEqual(youtube.metadataLevel, .youtubeCurrentEventTarget)
+  }
+
   func testMacOSCatalogIncludesDashExperiment() throws {
     #if os(macOS)
       let channel = try XCTUnwrap(

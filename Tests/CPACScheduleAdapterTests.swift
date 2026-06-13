@@ -27,6 +27,6 @@ final class CPACScheduleAdapterTests: XCTestCase {
     XCTAssertEqual(metadata.currentEventTime, "10:00 AM - 11:00 AM ET")
     XCTAssertEqual(metadata.nextEventTitle, "Question Period")
     XCTAssertEqual(metadata.nextEventTime, "11:00 AM ET")
-    XCTAssertEqual(metadata.confidence, "High")
+    XCTAssertEqual(metadata.confidence, .high)
   }
 }
