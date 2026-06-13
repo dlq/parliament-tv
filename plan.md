@@ -546,7 +546,7 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 Current public-facing baseline:
 
 - Done: add `README.md` with prototype scope, platform targets, build/test commands, non-affiliation language, and source/rights cautions.
-- Done: add MIT `LICENSE` for project code.
+- Done: add BSD 3-Clause `LICENSE` for project code.
 - Done: add `docs/sources-and-provenance.md` to separate code licensing from stream/source/page-capture/design-asset rights.
 - Done: add `CONTRIBUTING.md` with required evidence for source and stream corrections.
 - Done: add `PRIVACY.md` describing the current local-only/no-analytics prototype posture.

@@ -80,7 +80,7 @@ docs/                 Public notices and source/provenance notes
 
 ## Source and Rights Notes
 
-The code is licensed under the repository license. Stream URLs, official pages, screenshots, preview captures, marks, and broadcast content are not owned by this project and may be subject to separate terms.
+The code is licensed under the BSD 3-Clause license. Stream URLs, official pages, screenshots, preview captures, marks, and broadcast content are not owned by this project and may be subject to separate terms.
 
 See [docs/sources-and-provenance.md](docs/sources-and-provenance.md) before reusing catalogue entries, preview images, or design assets outside this prototype.
 
