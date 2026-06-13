@@ -1,0 +1,34 @@
+name: Schedule metadata issue
+description: Report incorrect, missing, stale, or misleading now/next metadata.
+title: "[Schedule]: "
+labels: ["metadata", "schedule"]
+body:
+  - type: input
+    id: channel
+    attributes:
+      label: Channel or source
+      placeholder: Quebec National Assembly - Canal 05
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong?
+      description: Describe the missing or incorrect now/next/event information.
+    validations:
+      required: true
+  - type: input
+    id: official_schedule
+    attributes:
+      label: Official schedule or event URL
+      description: Link to the official schedule, calendar, live page, or event page if known.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected metadata
+      description: Include event title, start/end time, timezone, room/chamber, language, or source labels when relevant.
+  - type: input
+    id: observed_at
+    attributes:
+      label: Observed date and region
+      placeholder: 2026-06-13, Canada

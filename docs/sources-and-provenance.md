@@ -50,4 +50,6 @@ Design concept exploration assets are intentionally excluded from the public rep
 
 `research.md` is a working log. It contains validated findings, failed checks, speculative candidates, external references, and older observations that can become stale. It should not be treated as a polished public registry.
 
+The file is intended to be public, but it should still be treated as research evidence rather than permission guidance. Revalidate URLs, playback behavior, schedules, and terms before relying on an entry.
+
 The long-term advocacy direction may be a separate open parliamentary streams catalogue with explicit schema, validation history, provenance, and terms fields. That is distinct from the app's current prototype catalogue.

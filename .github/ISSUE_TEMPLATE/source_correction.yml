@@ -1,0 +1,47 @@
+name: Source or stream correction
+description: Suggest a new official source, stream URL correction, or source-quality update.
+title: "[Source]: "
+labels: ["source"]
+body:
+  - type: input
+    id: source_name
+    attributes:
+      label: Legislature, broadcaster, or source name
+      placeholder: New Zealand Parliament TV
+    validations:
+      required: true
+  - type: input
+    id: official_page
+    attributes:
+      label: Official page URL
+      description: Link to the legislature, broadcaster, official player, or official YouTube page.
+    validations:
+      required: true
+  - type: input
+    id: stream_url
+    attributes:
+      label: Stream, embed, or player URL
+      description: Include HLS/DASH/embed/player URL if known. Leave blank if this is a link-out source.
+  - type: dropdown
+    id: source_type
+    attributes:
+      label: Source type
+      options:
+        - Direct HLS
+        - Direct DASH
+        - Official web player
+        - Official YouTube
+        - Official page/link-out
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation notes
+      description: Include status code, content type, player tested, platform tested, date, and region.
+  - type: textarea
+    id: terms
+    attributes:
+      label: Terms, attribution, or source-quality notes
+      description: Link to terms or explain known restrictions, attribution requirements, geofencing, or off-air behavior.

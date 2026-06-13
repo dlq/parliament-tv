@@ -60,7 +60,7 @@ Platform order:
 
 ### Local priority exceptions
 
-These are included because they are personally relevant and already validated.
+These are included because they are local-priority sources and already validated.
 
 | Channel | Source type | Metadata target | Notes |
 | --- | --- | --- | --- |
@@ -515,11 +515,20 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 - Make sure the UI can render Latin text with diacritics and macrons, Greek, Devanagari, Thai, Cyrillic/Mongolian-related source text, Inuktitut syllabics where available, and Traditional/Simplified Chinese without clipping in guide cards, drawers, and compact phone layouts.
 - SwiftUI app hygiene still to cover.
 - Make formatting mandatory in the dev workflow with Xcode's bundled `swift-format`; keep `make format`, `make format-check`, and `make verify` aligned.
-- Add CI that runs whitespace checks, `swift-format` lint, macOS tests, iPhone simulator build, iPad simulator build, and tvOS simulator build.
+- Expand CI beyond the current GitHub Actions baseline so it also runs iPhone simulator build, iPad simulator build, and tvOS simulator build once runner images and destination names are stable.
 - Revisit whether a second semantic linting layer is needed after the SwiftUI structure settles; avoid adding one until it catches issues `swift-format` and compiler warnings miss.
 - Add a small UI smoke-test layer for opening the guide, changing channels, hiding the guide, and checking the compact phone landscape drawer.
 - Add an accessibility pass for VoiceOver labels, focus order, Dynamic Type behavior, contrast, and remote/touch/keyboard parity.
 - Add structured logging around playback failures, metadata refresh failures, schedule parser drift, channel switching, and external-source launches.
+- Plan a later privacy-preserving popularity/discovery service before adding any analytics:
+  - Make viewing analytics opt-in with clear settings and privacy copy.
+  - Do not store accounts, raw IPs, precise GPS, or per-user viewing histories.
+  - Derive approximate location server-side from IP only long enough to bucket it, then discard the raw address.
+  - Store only coarse aggregate buckets such as channel ID, country/region/large-metro bucket, hour-of-day, day-of-week, month/season, and count.
+  - Apply minimum contribution thresholds before displaying popularity data so niche locations or unusual times cannot identify a viewer.
+  - Expose the result as discovery affordances such as a "Popular" guide group, "popular now", "often watched weekday mornings", or "trending in Canada" badges.
+  - Keep this separate from the open stream catalogue: catalogue data describes public sources; popularity data describes privacy-preserving aggregate app usage.
+  - Evaluate CloudKit as the Apple-native storage option: private database for per-user synced preferences, public database for app-wide aggregate popularity records, and CloudKit Console telemetry/logs for operational visibility. Do not treat CloudKit by itself as a privacy design; still require opt-in, coarse buckets, raw-data minimization, and display thresholds.
 - Review app lifecycle behavior: first launch, cold start, returning from background, rotation/resizing, simulator/device orientation changes, and state restoration.
 - Review platform-specific polish: tvOS focus effects, iPad size classes, iPhone landscape/portrait density, macOS window sizing, menu commands, and keyboard shortcuts.
 - Add a consistent loading/off-air/error-state pattern shared across native HLS, DASH, schedule-poor channels, YouTube cards, and official link-out cards.
@@ -555,10 +564,14 @@ Current public-facing baseline:
 - Done: mark `research.md` as a working research log rather than an endorsed public stream directory.
 - Done: remove generated icon concept exploration assets from the public repository baseline.
 - Done: add fresh macOS, iPhone, iPadOS, and tvOS screenshots to the README.
+- Done: add `SECURITY.md` with lightweight sensitive-reporting guidance.
+- Done: add GitHub issue templates for playback bugs, source corrections, schedule metadata issues, and UI/platform issues.
+- Current CI baseline: GitHub Actions runs public-repo checks for formatting and macOS tests.
 
 Remaining before making the repo highly presentable:
 
 - Consider adding a short demo GIF after the UI has a stable public-facing state.
+- Evaluate Xcode Cloud once the app is closer to TestFlight/App Store distribution. Use it for Apple-native build, parallel device tests, archive/signing, TestFlight delivery, and App Store Connect visibility if it adds value beyond the public GitHub Actions checks.
 - Keep contribution and privacy notes current as network behavior, persistence, or validation tooling changes.
 
 ### Phase 5b: Curated second ring

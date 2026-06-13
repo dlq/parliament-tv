@@ -13,19 +13,19 @@ This is possible, but the first version should model sources as a mix of:
 2. Official web-player channels: sources where the official page is public, but the stream URL is dynamic, embedded, protected by player logic, or not clearly licensed for direct reuse.
 3. External-platform channels: YouTube or app-store/mobile app routes that are public but less suitable for an integrated channel-flipping app unless embedded under that platform's rules.
 
-The target list is realistic, but the "all public bodies expose a stable first-party HLS URL" assumption is only partly true. In this pass I validated 21 HLS endpoints from official pages/APIs or official vendor players:
+The target list is realistic, but the "all public bodies expose a stable first-party HLS URL" assumption is only partly true. This pass validated 21 HLS endpoints from official pages/APIs or official vendor players:
 
 - CPAC: 1 official HLS URL exposed by CPAC's own content-store API and backed by Vualto/VuStreams.
 - C-SPAN: partially feasible. Free/public access exists for congressional floor proceedings, hearings, and events through C-SPAN Now, but the C-SPAN, C-SPAN2, and C-SPAN3 TV network livestreams require cable/satellite authentication.
-- British Parliament: feasible through Parliamentlive.tv and UK Parliament YouTube, but I did not find a stable raw HLS URL; Parliamentlive.tv uses a Red Bee player stack. BBC Parliament is geo-restricted via BBC iPlayer, so it is not a good open worldwide source.
+- British Parliament: feasible through Parliamentlive.tv and UK Parliament YouTube, but no stable raw HLS URL was found; Parliamentlive.tv uses a Red Bee player stack. BBC Parliament is geo-restricted via BBC iPlayer, so it is not a good open worldwide source.
 - French Parliament: feasible through the Assemblee nationale video portal, LCP, Public Senat, and social/YouTube routes. Official direct stream URLs need further extraction/validation.
 - Quebec National Assembly: 14 official-vendor Wowza HLS channel URLs validated. The official live-list API also returned current activity metadata and active channel URLs.
 - Ontario Legislative Assembly: 6 official-vendor iSi LIVE HLS URLs validated for House, captioned House, committee rooms, and media studio.
-- European Parliament: strong candidate through the Multimedia Centre webstreaming platform, iframe embeds, multilingual streaming, and reusable/free material with source attribution, but I did not validate a stable raw HLS URL.
+- European Parliament: strong candidate through the Multimedia Centre webstreaming platform, iframe embeds, multilingual streaming, and reusable/free material with source attribution, but no stable raw HLS URL was validated.
 
 ## Validated stable HLS inventory
 
-Validation date: 2026-05-12 from Montreal/Toronto region. "Official-vendor" means the URL is hosted by the legislature's streaming vendor, but was discovered from an official page, official iframe, or official API rather than from a random relay.
+Validation date: 2026-05-12 from a Canadian validation environment. "Official-vendor" means the URL is hosted by the legislature's streaming vendor, but was discovered from an official page, official iframe, or official API rather than from a random relay.
 
 | Legislature/source | Count | Status |
 | --- | ---: | --- |
@@ -173,7 +173,7 @@ https://vs-cmaf-pushb-uk-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_parli
 
 Validation result on 2026-05-12:
 
-- The BBC Parliament DASH URL returned HTTP 403 from Akamai from my location.
+- The BBC Parliament DASH URL returned HTTP 403 from Akamai in the validation environment.
 
 Parliamentlive.tv player inspection on 2026-05-12:
 
@@ -262,7 +262,7 @@ https://cdn3.wowza.com/5/SVEySlNEQ0FOWXlS/diffusion/canal06/playlist.m3u8
 https://cdn3.wowza.com/5/SVEySlNEQ0FOWXlS/diffusion/canal14/playlist.m3u8
 ```
 
-- I then validated the full numbered channel pattern from `canal01` through `canal14`; all 14 returned HTTP 200 and content type `application/vnd.apple.mpegurl`.
+- The full numbered channel pattern from `canal01` through `canal14` was then validated; all 14 returned HTTP 200 and content type `application/vnd.apple.mpegurl`.
 - Representative playlist shape:
 
 ```text
@@ -413,7 +413,7 @@ https://player.watchity.com
 https://wbep.watchity.net/v1/wbe
 ```
 
-This may integrate better than Red Bee if an official embed or documented event/player URL is available, but I did not validate a stable raw HLS URL for European Parliament in this pass.
+This may integrate better than Red Bee if an official embed or documented event/player URL is available, but this pass did not validate a stable raw HLS URL for European Parliament.
 
 Adjacent expansion candidate:
 
@@ -506,7 +506,7 @@ Useful source:
 
 Date of pass: 2026-05-12.
 
-Scope: all 25 countries currently listed in the Democracy Index 2025 table as "Full democracy", plus France as a near-threshold edge case. I validated direct HLS/DASH only where an actual manifest URL returned HTTP 200 or the official page itself published a manifest URL. Otherwise I recorded the best official fallback: first-party player, official embedded player, or official YouTube/live page.
+Scope: all 25 countries currently listed in the Democracy Index 2025 table as "Full democracy", plus France as a near-threshold edge case. Direct HLS/DASH was counted only where an actual manifest URL returned HTTP 200 or the official page itself published a manifest URL. Otherwise, the best official fallback was recorded: first-party player, official embedded player, or official YouTube/live page.
 
 Summary:
 
@@ -637,7 +637,7 @@ This pass checked the risks identified after the tier research: playback/CORS, t
 
 ### Playback and CORS probe
 
-I could not run a full Playwright/browser decode in this workspace because browser automation tooling was not available. Instead, I ran a browser-like HTTP probe with an `Origin` header against the likely MVP direct-stream candidates. This is not a substitute for testing `<video>`/`hls.js` playback in Chrome, Safari, and mobile Safari, but it catches the first-order blockers: HTTP status, content type, CORS headers, and playlist shape.
+A full Playwright/browser decode was not available in the original research workspace. Instead, the pass used a browser-like HTTP probe with an `Origin` header against the likely MVP direct-stream candidates. This is not a substitute for testing `<video>`/`hls.js` playback in Chrome, Safari, and mobile Safari, but it catches the first-order blockers: HTTP status, content type, CORS headers, and playlist shape.
 
 Result: all tested direct HLS candidates returned HTTP 200 and had permissive or origin-reflecting CORS headers.
 

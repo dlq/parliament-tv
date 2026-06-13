@@ -13,4 +13,6 @@ External pages and video platforms may have their own logging, cookies, tracking
 
 Pinned channel preferences are stored locally with app preferences. No server-side account or sync layer is currently implemented.
 
+Future ideas such as CloudKit sync or opt-in aggregate popularity statistics are planning notes only. They are not implemented in the current app.
+
 This file is a development note, not an App Store privacy nutrition label.

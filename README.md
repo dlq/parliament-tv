@@ -19,6 +19,7 @@ This project is not affiliated with, endorsed by, or sponsored by any parliament
 - Official-source cards for YouTube and other non-native sources.
 - Shared SwiftUI interface across macOS, iOS/iPadOS, and tvOS.
 - `swift-format` based formatting/linting and Xcode build/test workflow.
+- Public GitHub Actions CI for formatting and macOS tests.
 
 ## Screenshots
 
@@ -37,6 +38,7 @@ These screenshots show live public video sources as rendered by the app during d
 - macOS with Xcode installed.
 - Xcode's bundled `swift-format` available through `xcrun`.
 - Simulators matching the destinations in `Makefile` for the full local verification workflow.
+- The app currently uses a macOS 15.0 deployment target for CI compatibility; iOS/iPadOS/tvOS targets are still prototype-era Xcode 26 simulator targets.
 
 ## Build and Verify
 
@@ -66,17 +68,27 @@ make verify
 
 `make verify` runs whitespace checks, `swift-format` lint, macOS tests, iPhone simulator build, iPad simulator build, and tvOS simulator build.
 
+GitHub Actions currently runs a conservative public-repository CI baseline: whitespace checks, `swift-format` lint, and macOS tests. The full simulator build matrix remains a local `make verify` workflow until the CI environment and simulator destinations are stabilized.
+
 ## Repository Layout
 
 ```text
 App/                  SwiftUI app, models, catalogue, playback, schedule adapters
 Tests/                Unit tests for catalogue, schedule adapters, and metadata
 Scripts/verify.sh     Local verification workflow
-Design/IconConcepts/  Design exploration assets
 plan.md               Product and implementation plan
 research.md           Research log for stream and schedule feasibility
 docs/                 Public notices and source/provenance notes
 ```
+
+## Known Limitations
+
+- Source URLs, stream availability, schedules, captions, and terms can drift.
+- Legal/source labels are conservative implementation notes, not legal advice.
+- Schedule coverage is uneven: some channels have now/next metadata, while others only expose signal state.
+- YouTube, DASH, and official web-player sources are second-class compared with native HLS playback.
+- The public CI workflow does not yet run the full iPhone, iPad, and tvOS simulator build matrix.
+- There are currently no accounts, analytics, iCloud sync, or server-side popularity features.
 
 ## Source and Rights Notes
 
@@ -86,6 +98,8 @@ See [docs/sources-and-provenance.md](docs/sources-and-provenance.md) before reus
 
 See [PRIVACY.md](PRIVACY.md) for the current prototype privacy posture.
 
+See [SECURITY.md](SECURITY.md) for sensitive reporting guidance.
+
 ## Research Log
 
 `research.md` is a working research log. It includes successful checks, failed checks, dead ends, candidate sources, and notes that may become stale. Treat it as evidence of exploration, not as an endorsed public stream directory.
@@ -93,6 +107,8 @@ See [PRIVACY.md](PRIVACY.md) for the current prototype privacy posture.
 ## Contributing
 
 Source corrections and playback fixes are welcome when they are backed by official source URLs and validation notes. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Use GitHub issue templates for playback bugs, source corrections, schedule metadata issues, and UI/platform problems.
 
 ## Why This Exists
 

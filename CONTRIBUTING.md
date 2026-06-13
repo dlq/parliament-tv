@@ -2,6 +2,8 @@
 
 This project is early and curated. Small, evidence-backed changes are easiest to review.
 
+Use the GitHub issue templates for playback bugs, source corrections, schedule metadata issues, and platform/UI problems. If the report is sensitive, follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
+
 ## Source or Stream Corrections
 
 For channel/source changes, include:
@@ -33,6 +35,8 @@ make verify
 ```
 
 `make verify` depends on local simulator names, so it may need adjustment if your Xcode installation has different simulator devices.
+
+The public GitHub Actions workflow currently runs whitespace checks, `swift-format` lint, and macOS tests. The broader iPhone, iPad, and tvOS simulator build pass is still local-only through `make verify`.
 
 ## Research Notes
 

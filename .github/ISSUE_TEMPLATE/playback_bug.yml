@@ -1,0 +1,46 @@
+name: Playback bug
+description: Report a stream, player, or platform playback problem.
+title: "[Playback]: "
+labels: ["playback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for streams that do not tune, pause unexpectedly, show the wrong state, or behave differently across platforms.
+  - type: input
+    id: channel
+    attributes:
+      label: Channel or source
+      description: Name the channel/source and include the channel code if visible.
+      placeholder: CPAC Canada, 001 CPAC
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - iPhone
+        - iPad
+        - tvOS
+        - Multiple platforms
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Describe what you saw and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add validation notes, screenshots, logs, dates, region, or official source links if available.
+  - type: textarea
+    id: caveats
+    attributes:
+      label: Caveats
+      description: Note off-air timing, geofencing, sign-in prompts, temporary outages, or other context.
