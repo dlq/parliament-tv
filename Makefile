@@ -1,6 +1,9 @@
-.PHONY: verify test build-tvos build-ios build-macos format format-check lint
+.PHONY: bootstrap verify test build-tvos build-ios build-ipad build-macos format format-check lint
 
 DERIVED_DATA_PATH ?= /tmp/ParliamentsDerivedData
+
+bootstrap:
+	xcrun --find swift-format
 
 verify:
 	Scripts/verify.sh
@@ -14,14 +17,17 @@ build-tvos:
 build-ios:
 	xcodebuild build -project Parliaments.xcodeproj -scheme Parliaments -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -derivedDataPath "$(DERIVED_DATA_PATH)"
 
+build-ipad:
+	xcodebuild build -project Parliaments.xcodeproj -scheme Parliaments -configuration Debug -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=latest' -derivedDataPath "$(DERIVED_DATA_PATH)"
+
 build-macos:
 	xcodebuild build -project Parliaments.xcodeproj -scheme Parliaments -configuration Debug -destination 'platform=macOS,arch=arm64' -derivedDataPath "$(DERIVED_DATA_PATH)"
 
 format:
-	swiftformat App Tests
+	xcrun swift-format format --in-place --recursive --parallel App Tests
 
 format-check:
-	swiftformat --lint App Tests
+	xcrun swift-format lint --recursive --parallel --strict App Tests
 
 lint:
-	swiftlint lint --strict
+	xcrun swift-format lint --recursive --parallel --strict App Tests

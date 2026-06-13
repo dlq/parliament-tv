@@ -501,6 +501,21 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 - Better off-air detection.
 - Segment advancement checks.
 - Captions/audio language discovery.
+- i18n/l10n coverage for current stream and source-metadata languages: English, French, Portuguese, Danish, Dutch, Spanish, Greek, Luxembourgish, Italian, Hindi, Thai, Slovak, Mongolian, Inuktitut, Mandarin, and Māori.
+- Treat localization as two related layers: app-shell strings for the interface, and source metadata handling for channel names, schedule titles, audio labels, captions, scripts, accents, sorting, search, and fallback text.
+- Make sure the UI can render Latin text with diacritics and macrons, Greek, Devanagari, Thai, Cyrillic/Mongolian-related source text, Inuktitut syllabics where available, and Traditional/Simplified Chinese without clipping in guide cards, drawers, and compact phone layouts.
+- SwiftUI app hygiene still to cover.
+- Make formatting mandatory in the dev workflow with Xcode's bundled `swift-format`; keep `make format`, `make format-check`, and `make verify` aligned.
+- Add CI that runs whitespace checks, `swift-format` lint, macOS tests, iPhone simulator build, iPad simulator build, and tvOS simulator build.
+- Revisit whether a second semantic linting layer is needed after the SwiftUI structure settles; avoid adding one until it catches issues `swift-format` and compiler warnings miss.
+- Add a small UI smoke-test layer for opening the guide, changing channels, hiding the guide, and checking the compact phone landscape drawer.
+- Add an accessibility pass for VoiceOver labels, focus order, Dynamic Type behavior, contrast, and remote/touch/keyboard parity.
+- Add structured logging around playback failures, metadata refresh failures, schedule parser drift, channel switching, and external-source launches.
+- Review app lifecycle behavior: first launch, cold start, returning from background, rotation/resizing, simulator/device orientation changes, and state restoration.
+- Review platform-specific polish: tvOS focus effects, iPad size classes, iPhone landscape/portrait density, macOS window sizing, menu commands, and keyboard shortcuts.
+- Add a consistent loading/off-air/error-state pattern shared across native HLS, DASH, schedule-poor channels, YouTube cards, and official link-out cards.
+- Review release basics before TestFlight/App Store: signing, provisioning, app sandbox, privacy nutrition, network/privacy wording, bundle metadata, and support URL.
+- Decide whether to keep local-only user preferences in `AppStorage` or introduce a small persistence boundary before adding recent channels, custom pins, or validation history.
 - Apple framework review pass:
   - `AVFoundation` / `AVKit` (macOS, iOS, tvOS): deepen playback diagnostics with access/error logs, media-selection groups, timed metadata, captions, audio-language discovery, PiP, and better live-state handling.
   - `NaturalLanguage` (macOS, iOS, tvOS): lightweight language detection and title/label cleanup without requiring Apple Intelligence.

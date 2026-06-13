@@ -3,20 +3,19 @@ set -euo pipefail
 
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/ParliamentsDerivedData}"
 
-run_optional_tool() {
+require_tool() {
   local name="$1"
-  shift
 
-  if command -v "$name" >/dev/null 2>&1; then
-    "$name" "$@"
-  else
-    echo "warning: $name not installed; skipping"
+  if ! command -v "$name" >/dev/null 2>&1; then
+    echo "error: $name is required." >&2
+    exit 127
   fi
 }
 
+require_tool xcrun
+
 git diff --check
-run_optional_tool swiftformat --lint App Tests
-run_optional_tool swiftlint lint --strict
+xcrun swift-format lint --recursive --parallel --strict App Tests
 
 xcodebuild test \
   -project Parliaments.xcodeproj \
@@ -30,6 +29,13 @@ xcodebuild build \
   -scheme Parliaments \
   -configuration Debug \
   -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+  -derivedDataPath "$DERIVED_DATA_PATH"
+
+xcodebuild build \
+  -project Parliaments.xcodeproj \
+  -scheme Parliaments \
+  -configuration Debug \
+  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=latest' \
   -derivedDataPath "$DERIVED_DATA_PATH"
 
 xcodebuild build \

@@ -7,220 +7,232 @@
 
 import AVKit
 import SwiftUI
+
 #if os(macOS)
-import WebKit
+  import WebKit
 #endif
 
 struct PlayerSurface: View {
-    enum Style {
-        case framed
-        case fullBleed
+  enum Style {
+    case framed
+    case fullBleed
+  }
+
+  let channel: Channel
+  let style: Style
+  @Binding private var isInAppWebOverlayVisible: Bool
+
+  @Environment(\.openURL) private var openURL
+  @State private var player = AVPlayer()
+  @State private var signalState: SignalState = .idle
+  @State private var loadID = UUID()
+  @State private var currentItemObservation: NSKeyValueObservation?
+
+  init(
+    channel: Channel, style: Style = .framed,
+    isInAppWebOverlayVisible: Binding<Bool> = .constant(false)
+  ) {
+    self.channel = channel
+    self.style = style
+    _isInAppWebOverlayVisible = isInAppWebOverlayVisible
+  }
+
+  var body: some View {
+    ZStack(alignment: .bottomLeading) {
+      surface
+      signalOverlay
+
+      if style == .framed {
+        framedTitleOverlay
+      }
+    }
+    .clipShape(RoundedRectangle(cornerRadius: style == .framed ? 8 : 0, style: .continuous))
+    .overlay { borderOverlay }
+    .onAppear(perform: loadPlayer)
+    .onChange(of: channel.id) { _, _ in
+      isInAppWebOverlayVisible = false
+      loadPlayer()
+    }
+    .onDisappear {
+      isInAppWebOverlayVisible = false
+      player.pause()
+    }
+  }
+
+  private var framedTitleOverlay: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(spacing: 10) {
+        Text(channel.shortName)
+          .font(.caption.weight(.heavy))
+          .textCase(.uppercase)
+          .foregroundStyle(.black)
+          .padding(.horizontal, 10)
+          .padding(.vertical, 6)
+          .background(.white, in: RoundedRectangle(cornerRadius: 5))
+
+        Text(channel.availability.label)
+          .font(.caption.weight(.bold))
+          .foregroundStyle(.white.opacity(0.86))
+          .padding(.horizontal, 10)
+          .padding(.vertical, 6)
+          .background(.black.opacity(0.62), in: RoundedRectangle(cornerRadius: 5))
+      }
+
+      VStack(alignment: .leading, spacing: 5) {
+        Text(channel.name)
+          .font(.largeTitle.weight(.bold))
+          .lineLimit(1)
+
+        Text(channel.program.currentEventTitle)
+          .font(.headline.weight(.semibold))
+          .foregroundStyle(.white.opacity(0.74))
+          .lineLimit(1)
+      }
+    }
+    .foregroundStyle(.white)
+    .shadow(radius: 8)
+    .padding(26)
+  }
+
+  @ViewBuilder
+  private var borderOverlay: some View {
+    if style == .framed {
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .stroke(.white.opacity(0.12), lineWidth: 1)
+    }
+  }
+
+  @ViewBuilder
+  private var signalOverlay: some View {
+    if channel.displayMode == .nativePlayer, channel.sourceType == .directHLS,
+      signalState != .playing
+    {
+      VStack {
+        HStack {
+          Spacer()
+
+          Label(signalState.label(for: channel), systemImage: signalState.systemImage)
+            .font(.caption.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.black.opacity(0.72), in: RoundedRectangle(cornerRadius: 5))
+        }
+
+        Spacer()
+      }
+      .padding(18)
+    }
+  }
+
+  @ViewBuilder
+  private var surface: some View {
+    if channel.displayMode == .nativePlayer, channel.sourceType == .directDASH,
+      let playbackURL = channel.playbackURL
+    {
+      PlatformDASHPlayer(url: playbackURL)
+        .background(.black)
+    } else if channel.displayMode == .nativePlayer, channel.playbackURL != nil {
+      PlatformVideoPlayer(player: player)
+        .background(.black)
+    } else {
+      LinkOutSurface(channel: channel, isShowingInAppSource: $isInAppWebOverlayVisible) {
+        openURL(channel.officialURL)
+      }
+    }
+  }
+
+  private func loadPlayer() {
+    guard channel.displayMode == .nativePlayer, let playbackURL = channel.playbackURL,
+      channel.sourceType == .directHLS
+    else {
+      signalState = .idle
+      loadID = UUID()
+      player.pause()
+      player.replaceCurrentItem(with: nil)
+      return
     }
 
-    let channel: Channel
-    let style: Style
-    @Binding private var isInAppWebOverlayVisible: Bool
+    let currentLoadID = UUID()
+    loadID = currentLoadID
+    signalState = .loading
+    currentItemObservation = nil
 
-    @Environment(\.openURL) private var openURL
-    @State private var player = AVPlayer()
-    @State private var signalState: SignalState = .idle
-    @State private var loadID = UUID()
-    @State private var currentItemObservation: NSKeyValueObservation?
-
-    init(channel: Channel, style: Style = .framed, isInAppWebOverlayVisible: Binding<Bool> = .constant(false)) {
-        self.channel = channel
-        self.style = style
-        _isInAppWebOverlayVisible = isInAppWebOverlayVisible
+    let item = AVPlayerItem(url: playbackURL)
+    currentItemObservation = item.observe(\.status, options: [.initial, .new]) { [player] item, _ in
+      guard item.status == .readyToPlay else { return }
+      Task { @MainActor in
+        signalState = .playing
+      }
+      player.playImmediately(atRate: 1.0)
     }
 
-    var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            surface
-            signalOverlay
+    player.replaceCurrentItem(with: item)
+    player.playImmediately(atRate: 1.0)
 
-            if style == .framed {
-                framedTitleOverlay
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: style == .framed ? 8 : 0, style: .continuous))
-        .overlay { borderOverlay }
-        .onAppear(perform: loadPlayer)
-        .onChange(of: channel.id) { _, _ in
-            isInAppWebOverlayVisible = false
-            loadPlayer()
-        }
-        .onDisappear {
-            isInAppWebOverlayVisible = false
-            player.pause()
-        }
-    }
-
-    private var framedTitleOverlay: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Text(channel.shortName)
-                    .font(.caption.weight(.heavy))
-                    .textCase(.uppercase)
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 5))
-
-                Text(channel.availability.label)
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.white.opacity(0.86))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.black.opacity(0.62), in: RoundedRectangle(cornerRadius: 5))
-            }
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text(channel.name)
-                    .font(.largeTitle.weight(.bold))
-                    .lineLimit(1)
-
-                Text(channel.program.currentEventTitle)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.74))
-                    .lineLimit(1)
-            }
-        }
-        .foregroundStyle(.white)
-        .shadow(radius: 8)
-        .padding(26)
-    }
-
-    @ViewBuilder
-    private var borderOverlay: some View {
-        if style == .framed {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(.white.opacity(0.12), lineWidth: 1)
-        }
-    }
-
-    @ViewBuilder
-    private var signalOverlay: some View {
-        if channel.displayMode == .nativePlayer, channel.sourceType == .directHLS, signalState != .playing {
-            VStack {
-                HStack {
-                    Spacer()
-
-                    Label(signalState.label(for: channel), systemImage: signalState.systemImage)
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.black.opacity(0.72), in: RoundedRectangle(cornerRadius: 5))
-                }
-
-                Spacer()
-            }
-            .padding(18)
-        }
-    }
-
-    @ViewBuilder
-    private var surface: some View {
-        if channel.displayMode == .nativePlayer, channel.sourceType == .directDASH, let playbackURL = channel.playbackURL {
-            PlatformDASHPlayer(url: playbackURL)
-                .background(.black)
-        } else if channel.displayMode == .nativePlayer, channel.playbackURL != nil {
-            PlatformVideoPlayer(player: player)
-                .background(.black)
-        } else {
-            LinkOutSurface(channel: channel, isShowingInAppSource: $isInAppWebOverlayVisible) {
-                openURL(channel.officialURL)
-            }
-        }
-    }
-
-    private func loadPlayer() {
-        guard channel.displayMode == .nativePlayer, let playbackURL = channel.playbackURL, channel.sourceType == .directHLS else {
-            signalState = .idle
-            loadID = UUID()
-            player.pause()
-            player.replaceCurrentItem(with: nil)
-            return
-        }
-
-        let currentLoadID = UUID()
-        loadID = currentLoadID
-        signalState = .loading
-        currentItemObservation = nil
-
-        let item = AVPlayerItem(url: playbackURL)
-        currentItemObservation = item.observe(\.status, options: [.initial, .new]) { [player] item, _ in
-            guard item.status == .readyToPlay else { return }
-            Task { @MainActor in
-                signalState = .playing
-            }
-            player.playImmediately(atRate: 1.0)
-        }
-
-        player.replaceCurrentItem(with: item)
+    Task { @MainActor in
+      try? await Task.sleep(for: .seconds(6))
+      guard loadID == currentLoadID else { return }
+      if player.timeControlStatus != .playing {
         player.playImmediately(atRate: 1.0)
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(6))
-            guard loadID == currentLoadID else { return }
-            if player.timeControlStatus != .playing {
-                player.playImmediately(atRate: 1.0)
-            }
-            try? await Task.sleep(for: .seconds(1))
-            guard loadID == currentLoadID else { return }
-            signalState = player.currentItem?.status == .readyToPlay || player.timeControlStatus == .playing ? .playing : .noSignal
-        }
+      }
+      try? await Task.sleep(for: .seconds(1))
+      guard loadID == currentLoadID else { return }
+      signalState =
+        player.currentItem?.status == .readyToPlay || player.timeControlStatus == .playing
+        ? .playing : .noSignal
     }
+  }
 }
 
 private struct PlatformDASHPlayer: View {
-    let url: URL
+  let url: URL
 
-    var body: some View {
-        #if os(macOS)
-        MacDASHPlayer(url: url)
-        #else
-        DASHUnsupportedSurface()
-        #endif
-    }
+  var body: some View {
+    #if os(macOS)
+      MacDASHPlayer(url: url)
+    #else
+      DASHUnsupportedSurface()
+    #endif
+  }
 }
 
 #if os(macOS)
-private struct MacDASHPlayer: NSViewRepresentable {
+  private struct MacDASHPlayer: NSViewRepresentable {
     let url: URL
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+      Coordinator()
     }
 
     func makeNSView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.allowsAirPlayForMediaPlayback = true
-        configuration.mediaTypesRequiringUserActionForPlayback = []
+      let configuration = WKWebViewConfiguration()
+      configuration.allowsAirPlayForMediaPlayback = true
+      configuration.mediaTypesRequiringUserActionForPlayback = []
 
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.setValue(false, forKey: "drawsBackground")
-        loadIfNeeded(webView, context: context)
-        return webView
+      let webView = WKWebView(frame: .zero, configuration: configuration)
+      webView.setValue(false, forKey: "drawsBackground")
+      loadIfNeeded(webView, context: context)
+      return webView
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
-        loadIfNeeded(webView, context: context)
+      loadIfNeeded(webView, context: context)
     }
 
     private func loadIfNeeded(_ webView: WKWebView, context: Context) {
-        guard context.coordinator.loadedURL != url else { return }
-        context.coordinator.loadedURL = url
-        webView.loadHTMLString(html, baseURL: URL(string: "https://cdn.dashjs.org/"))
+      guard context.coordinator.loadedURL != url else { return }
+      context.coordinator.loadedURL = url
+      webView.loadHTMLString(html, baseURL: URL(string: "https://cdn.dashjs.org/"))
     }
 
     final class Coordinator {
-        var loadedURL: URL?
+      var loadedURL: URL?
     }
 
     private var html: String {
-        let manifestURL = url.absoluteString
-        return """
+      let manifestURL = url.absoluteString
+      return """
         <!doctype html>
         <html>
         <head>
@@ -254,370 +266,372 @@ private struct MacDASHPlayer: NSViewRepresentable {
         </html>
         """
     }
-}
+  }
 #endif
 
 private struct DASHUnsupportedSurface: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "display.trianglebadge.exclamationmark")
-                .font(.system(size: 52, weight: .semibold))
+  var body: some View {
+    VStack(spacing: 12) {
+      Image(systemName: "display.trianglebadge.exclamationmark")
+        .font(.system(size: 52, weight: .semibold))
 
-            Text("DASH playback is macOS-only for now")
-                .font(.title2.weight(.bold))
+      Text("DASH playback is macOS-only for now")
+        .font(.title2.weight(.bold))
 
-            Text("This source needs a web-based MPEG-DASH player, which is not part of the tvOS native player path.")
-                .font(.callout.weight(.medium))
-                .foregroundStyle(.white.opacity(0.68))
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 460)
-        }
-        .foregroundStyle(.white)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.black)
+      Text(
+        "This source needs a web-based MPEG-DASH player, which is not part of the tvOS native player path."
+      )
+      .font(.callout.weight(.medium))
+      .foregroundStyle(.white.opacity(0.68))
+      .multilineTextAlignment(.center)
+      .frame(maxWidth: 460)
     }
+    .foregroundStyle(.white)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(.black)
+  }
 }
 
 private struct PlatformVideoPlayer: View {
-    let player: AVPlayer
+  let player: AVPlayer
 
-    var body: some View {
-        #if os(macOS)
-        MacVideoPlayer(player: player)
-        #else
-        VideoPlayer(player: player)
-        #endif
-    }
+  var body: some View {
+    #if os(macOS)
+      MacVideoPlayer(player: player)
+    #else
+      VideoPlayer(player: player)
+    #endif
+  }
 }
 
 #if os(macOS)
-private struct MacVideoPlayer: NSViewRepresentable {
+  private struct MacVideoPlayer: NSViewRepresentable {
     let player: AVPlayer
 
     func makeNSView(context: Context) -> AVPlayerView {
-        let view = AVPlayerView()
-        view.controlsStyle = .floating
-        view.player = player
-        return view
+      let view = AVPlayerView()
+      view.controlsStyle = .floating
+      view.player = player
+      return view
     }
 
     func updateNSView(_ view: AVPlayerView, context: Context) {
-        if view.player !== player {
-            view.player = player
-        }
+      if view.player !== player {
+        view.player = player
+      }
     }
-}
+  }
 #endif
 
 private enum SignalState: Equatable {
-    case idle
-    case loading
-    case playing
-    case noSignal
+  case idle
+  case loading
+  case playing
+  case noSignal
 
-    var systemImage: String {
-        switch self {
-        case .idle: "circle"
-        case .loading: "antenna.radiowaves.left.and.right"
-        case .playing: "play.fill"
-        case .noSignal: "exclamationmark.triangle"
-        }
+  var systemImage: String {
+    switch self {
+    case .idle: "circle"
+    case .loading: "antenna.radiowaves.left.and.right"
+    case .playing: "play.fill"
+    case .noSignal: "exclamationmark.triangle"
     }
+  }
 
-    func label(for channel: Channel) -> String {
-        switch self {
-        case .idle:
-            "Ready"
-        case .loading:
-            channel.availability == .alwaysOn ? "Tuning stream" : "Tuning stream, may be off air"
-        case .playing:
-            "Live"
-        case .noSignal:
-            channel.availability == .alwaysOn ? "No signal" : "No signal, likely off air"
-        }
+  func label(for channel: Channel) -> String {
+    switch self {
+    case .idle:
+      "Ready"
+    case .loading:
+      channel.availability == .alwaysOn ? "Tuning stream" : "Tuning stream, may be off air"
+    case .playing:
+      "Live"
+    case .noSignal:
+      channel.availability == .alwaysOn ? "No signal" : "No signal, likely off air"
     }
+  }
 }
 
 private struct LinkOutSurface: View {
-    let channel: Channel
-    @Binding var isShowingInAppSource: Bool
-    let openSource: () -> Void
+  let channel: Channel
+  @Binding var isShowingInAppSource: Bool
+  let openSource: () -> Void
 
-    var body: some View {
-        ZStack {
-            GeometryReader { proxy in
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .center, spacing: 42) {
-                        previewCard
-                            .frame(width: min(proxy.size.width * 0.52, 820))
+  var body: some View {
+    ZStack {
+      GeometryReader { proxy in
+        ViewThatFits(in: .horizontal) {
+          HStack(alignment: .center, spacing: 42) {
+            previewCard
+              .frame(width: min(proxy.size.width * 0.52, 820))
 
-                        details
-                            .frame(maxWidth: 480, alignment: .leading)
-                    }
+            details
+              .frame(maxWidth: 480, alignment: .leading)
+          }
 
-                    VStack(alignment: .leading, spacing: 24) {
-                        previewCard
-                        details
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .padding(44)
-                .background(background)
-            }
-
-            if isShowingInAppSource {
-                InAppSourceOverlay(channel: channel) {
-                    isShowingInAppSource = false
-                }
-                .transition(.opacity)
-            }
+          VStack(alignment: .leading, spacing: 24) {
+            previewCard
+            details
+          }
         }
-        .animation(.easeInOut(duration: 0.18), value: isShowingInAppSource)
-    }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .padding(44)
+        .background(background)
+      }
 
-    private var previewCard: some View {
-        Button(action: openSource) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(previewGradient)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(.white.opacity(0.14), lineWidth: 1)
-                    }
-
-                if let previewAssetName = channel.previewAssetName {
-                    Image(previewAssetName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .clipped()
-                        .overlay(.black.opacity(0.28))
-                }
-
-                VStack(alignment: .leading) {
-                    HStack {
-                        Text(channel.shortName)
-                            .font(.headline.weight(.heavy))
-                            .foregroundStyle(.white.opacity(0.92))
-                            .lineLimit(1)
-
-                        Spacer()
-                    }
-
-                    Spacer()
-
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(playButtonColor)
-                            .frame(width: 94, height: 66)
-                            .shadow(color: .black.opacity(0.26), radius: 18, y: 8)
-
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 30, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .offset(x: 2)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    Spacer()
-
-                    Text(channel.name)
-                        .font(.title2.weight(.bold))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-
-                    Text(openHint)
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.66))
-                }
-                .padding(24)
-            }
-            .aspectRatio(16.0 / 9.0, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+      if isShowingInAppSource {
+        InAppSourceOverlay(channel: channel) {
+          isShowingInAppSource = false
         }
-        .buttonStyle(.plain)
-        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .help("Open official source")
+        .transition(.opacity)
+      }
     }
+    .animation(.easeInOut(duration: 0.18), value: isShowingInAppSource)
+  }
 
-    private var details: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(title)
-                .font(.largeTitle.bold())
-                .foregroundStyle(.white)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+  private var previewCard: some View {
+    Button(action: openSource) {
+      ZStack {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+          .fill(previewGradient)
+          .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .stroke(.white.opacity(0.14), lineWidth: 1)
+          }
 
-            Text(channel.attributionText)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.76))
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button(action: openSource) {
-                Label(buttonTitle, systemImage: "arrow.up.forward")
-                    .font(.headline)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(playButtonColor)
-            .padding(.top, 4)
-
-            if channel.sourceType == .youtube {
-                inAppWebButton
-            }
+        if let previewAssetName = channel.previewAssetName {
+          Image(previewAssetName)
+            .resizable()
+            .scaledToFill()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+            .overlay(.black.opacity(0.28))
         }
-    }
 
-    @ViewBuilder
-    private var inAppWebButton: some View {
-        #if os(macOS)
-        Button {
-            isShowingInAppSource = true
-        } label: {
-            Label("Try in app", systemImage: "rectangle.connected.to.line.below")
-                .font(.headline)
+        VStack(alignment: .leading) {
+          HStack {
+            Text(channel.shortName)
+              .font(.headline.weight(.heavy))
+              .foregroundStyle(.white.opacity(0.92))
+              .lineLimit(1)
+
+            Spacer()
+          }
+
+          Spacer()
+
+          ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+              .fill(playButtonColor)
+              .frame(width: 94, height: 66)
+              .shadow(color: .black.opacity(0.26), radius: 18, y: 8)
+
+            Image(systemName: "play.fill")
+              .font(.system(size: 30, weight: .heavy))
+              .foregroundStyle(.white)
+              .offset(x: 2)
+          }
+          .frame(maxWidth: .infinity)
+
+          Spacer()
+
+          Text(channel.name)
+            .font(.title2.weight(.bold))
+            .foregroundStyle(.white)
+            .lineLimit(2)
+
+          Text(openHint)
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.66))
         }
-        .buttonStyle(.bordered)
-        .tint(.white)
-        .help("Try loading this source inside the app")
-        #endif
+        .padding(24)
+      }
+      .aspectRatio(16.0 / 9.0, contentMode: .fit)
+      .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
+    .buttonStyle(.plain)
+    .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .help("Open official source")
+  }
 
-    private var title: String {
-        channel.sourceType == .youtube ? "Open on YouTube" : "Open source"
-    }
+  private var details: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      Text(title)
+        .font(.largeTitle.bold())
+        .foregroundStyle(.white)
+        .lineLimit(2)
+        .fixedSize(horizontal: false, vertical: true)
 
-    private var buttonTitle: String {
-        channel.sourceType == .youtube ? "Open on YouTube" : "Open official source"
-    }
+      Text(channel.attributionText)
+        .font(.title3.weight(.semibold))
+        .foregroundStyle(.white.opacity(0.76))
+        .fixedSize(horizontal: false, vertical: true)
 
-    private var openHint: String {
-        channel.sourceType == .youtube ? "Launch the channel page" : "Launch the external source"
-    }
+      Button(action: openSource) {
+        Label(buttonTitle, systemImage: "arrow.up.forward")
+          .font(.headline)
+      }
+      .buttonStyle(.borderedProminent)
+      .tint(playButtonColor)
+      .padding(.top, 4)
 
-    private var playButtonColor: Color {
-        channel.sourceType == .youtube ? Color(red: 1.0, green: 0.0, blue: 0.0) : .blue
+      if channel.sourceType == .youtube {
+        inAppWebButton
+      }
     }
+  }
 
-    private var previewGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.12, green: 0.13, blue: 0.15),
-                Color(red: 0.06, green: 0.07, blue: 0.09)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+  @ViewBuilder
+  private var inAppWebButton: some View {
+    #if os(macOS)
+      Button {
+        isShowingInAppSource = true
+      } label: {
+        Label("Try in app", systemImage: "rectangle.connected.to.line.below")
+          .font(.headline)
+      }
+      .buttonStyle(.bordered)
+      .tint(.white)
+      .help("Try loading this source inside the app")
+    #endif
+  }
 
-    private var background: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.05, green: 0.06, blue: 0.07),
-                Color(red: 0.09, green: 0.12, blue: 0.14)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+  private var title: String {
+    channel.sourceType == .youtube ? "Open on YouTube" : "Open source"
+  }
+
+  private var buttonTitle: String {
+    channel.sourceType == .youtube ? "Open on YouTube" : "Open official source"
+  }
+
+  private var openHint: String {
+    channel.sourceType == .youtube ? "Launch the channel page" : "Launch the external source"
+  }
+
+  private var playButtonColor: Color {
+    channel.sourceType == .youtube ? Color(red: 1.0, green: 0.0, blue: 0.0) : .blue
+  }
+
+  private var previewGradient: LinearGradient {
+    LinearGradient(
+      colors: [
+        Color(red: 0.12, green: 0.13, blue: 0.15),
+        Color(red: 0.06, green: 0.07, blue: 0.09),
+      ],
+      startPoint: .topLeading,
+      endPoint: .bottomTrailing
+    )
+  }
+
+  private var background: LinearGradient {
+    LinearGradient(
+      colors: [
+        Color(red: 0.05, green: 0.06, blue: 0.07),
+        Color(red: 0.09, green: 0.12, blue: 0.14),
+      ],
+      startPoint: .topLeading,
+      endPoint: .bottomTrailing
+    )
+  }
 }
 
 private struct InAppSourceOverlay: View {
-    let channel: Channel
-    let close: () -> Void
+  let channel: Channel
+  let close: () -> Void
 
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Text(channel.name)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
+  var body: some View {
+    VStack(spacing: 0) {
+      HStack(spacing: 12) {
+        Text(channel.name)
+          .font(.headline.weight(.bold))
+          .foregroundStyle(.white)
+          .lineLimit(1)
 
-                Text("Experimental web view")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.white.opacity(0.62))
+        Text("Experimental web view")
+          .font(.caption.weight(.bold))
+          .foregroundStyle(.white.opacity(0.62))
 
-                Spacer()
+        Spacer()
 
-                Button(action: close) {
-                    Label("Close", systemImage: "xmark")
-                        .labelStyle(.iconOnly)
-                }
-                .buttonStyle(.plain)
-                .font(.headline.weight(.bold))
-                .foregroundStyle(.white.opacity(0.82))
-                .padding(9)
-                .background(.white.opacity(0.12), in: Circle())
-                .help("Close web view")
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .background(.black.opacity(0.88))
-
-            PlatformWebSourceView(url: channel.officialURL)
+        Button(action: close) {
+          Label("Close", systemImage: "xmark")
+            .labelStyle(.iconOnly)
         }
-        .background(.black)
+        .buttonStyle(.plain)
+        .font(.headline.weight(.bold))
+        .foregroundStyle(.white.opacity(0.82))
+        .padding(9)
+        .background(.white.opacity(0.12), in: Circle())
+        .help("Close web view")
+      }
+      .padding(.horizontal, 18)
+      .padding(.vertical, 12)
+      .background(.black.opacity(0.88))
+
+      PlatformWebSourceView(url: channel.officialURL)
     }
+    .background(.black)
+  }
 }
 
 private struct PlatformWebSourceView: View {
-    let url: URL
+  let url: URL
 
-    var body: some View {
-        #if os(macOS)
-        MacWebSourceView(url: url)
-        #else
-        WebSourceUnsupportedSurface()
-        #endif
-    }
+  var body: some View {
+    #if os(macOS)
+      MacWebSourceView(url: url)
+    #else
+      WebSourceUnsupportedSurface()
+    #endif
+  }
 }
 
 #if os(macOS)
-private struct MacWebSourceView: NSViewRepresentable {
+  private struct MacWebSourceView: NSViewRepresentable {
     let url: URL
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+      Coordinator()
     }
 
     func makeNSView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.allowsAirPlayForMediaPlayback = true
-        configuration.mediaTypesRequiringUserActionForPlayback = []
+      let configuration = WKWebViewConfiguration()
+      configuration.allowsAirPlayForMediaPlayback = true
+      configuration.mediaTypesRequiringUserActionForPlayback = []
 
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.setValue(false, forKey: "drawsBackground")
-        loadIfNeeded(webView, context: context)
-        return webView
+      let webView = WKWebView(frame: .zero, configuration: configuration)
+      webView.setValue(false, forKey: "drawsBackground")
+      loadIfNeeded(webView, context: context)
+      return webView
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
-        loadIfNeeded(webView, context: context)
+      loadIfNeeded(webView, context: context)
     }
 
     private func loadIfNeeded(_ webView: WKWebView, context: Context) {
-        guard context.coordinator.loadedURL != url else { return }
-        context.coordinator.loadedURL = url
-        webView.load(URLRequest(url: url))
+      guard context.coordinator.loadedURL != url else { return }
+      context.coordinator.loadedURL = url
+      webView.load(URLRequest(url: url))
     }
 
     final class Coordinator {
-        var loadedURL: URL?
+      var loadedURL: URL?
     }
-}
+  }
 #endif
 
 private struct WebSourceUnsupportedSurface: View {
-    var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "safari")
-                .font(.system(size: 44, weight: .semibold))
+  var body: some View {
+    VStack(spacing: 10) {
+      Image(systemName: "safari")
+        .font(.system(size: 44, weight: .semibold))
 
-            Text("In-app web view is macOS-only for now")
-                .font(.title3.weight(.bold))
-        }
-        .foregroundStyle(.white)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.black)
+      Text("In-app web view is macOS-only for now")
+        .font(.title3.weight(.bold))
     }
+    .foregroundStyle(.white)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(.black)
+  }
 }
