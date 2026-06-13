@@ -102,16 +102,14 @@ private struct DASHUnsupportedSurface: View {
       Image(systemName: "display.trianglebadge.exclamationmark")
         .font(.system(size: 52, weight: .semibold))
 
-      Text("DASH playback is macOS-only for now")
+      Text(L10n.string("player.dash.unsupported.title"))
         .font(.title2.weight(.bold))
 
-      Text(
-        "This source needs a web-based MPEG-DASH player, which is not part of the tvOS native player path."
-      )
-      .font(.callout.weight(.medium))
-      .foregroundStyle(.white.opacity(0.68))
-      .multilineTextAlignment(.center)
-      .frame(maxWidth: 460)
+      Text(L10n.string("player.dash.unsupported.body"))
+        .font(.callout.weight(.medium))
+        .foregroundStyle(.white.opacity(0.68))
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: 460)
     }
     .foregroundStyle(.white)
     .frame(maxWidth: .infinity, maxHeight: .infinity)

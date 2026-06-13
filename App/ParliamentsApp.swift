@@ -37,8 +37,8 @@ struct ParliamentsApp: App {
     @FocusedValue(\.channelCommands) private var channelCommands
 
     var body: some Commands {
-      CommandMenu("Channel") {
-        Button("Show Guide") {
+      CommandMenu(L10n.string("menu.channel")) {
+        Button(L10n.string("guide.action.show")) {
           channelCommands?.showGuide()
         }
         .keyboardShortcut("g", modifiers: [.command])
@@ -46,13 +46,13 @@ struct ParliamentsApp: App {
 
         Divider()
 
-        Button("Previous Channel") {
+        Button(L10n.string("menu.channel.previous")) {
           channelCommands?.selectPreviousChannel()
         }
         .keyboardShortcut("[", modifiers: [.command])
         .disabled(channelCommands == nil)
 
-        Button("Next Channel") {
+        Button(L10n.string("menu.channel.next")) {
           channelCommands?.selectNextChannel()
         }
         .keyboardShortcut("]", modifiers: [.command])
@@ -60,7 +60,10 @@ struct ParliamentsApp: App {
 
         Divider()
 
-        Button(channelCommands?.isCurrentChannelPinned == true ? "Unpin Channel" : "Pin Channel") {
+        Button(
+          channelCommands?.isCurrentChannelPinned == true
+            ? L10n.string("menu.channel.unpin") : L10n.string("menu.channel.pin")
+        ) {
           channelCommands?.togglePin()
         }
         .keyboardShortcut("p", modifiers: [.command])

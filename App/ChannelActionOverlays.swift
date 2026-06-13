@@ -19,7 +19,7 @@ import SwiftUI
         ZStack {
           HStack(spacing: 0) {
             MacPointerActionHotspot(
-              title: "Previous",
+              title: L10n.string("nav.previous"),
               systemImage: "chevron.left",
               placement: .left,
               isGuideVisible: isGuideVisible,
@@ -30,7 +30,7 @@ import SwiftUI
             Spacer(minLength: 0)
 
             MacPointerActionHotspot(
-              title: "Next",
+              title: L10n.string("nav.next"),
               systemImage: "chevron.right",
               placement: .right,
               isGuideVisible: isGuideVisible,
@@ -45,7 +45,7 @@ import SwiftUI
             if !isGuideVisible {
               HStack(spacing: 0) {
                 MacPointerActionHotspot(
-                  title: "Guide",
+                  title: L10n.string("nav.guide"),
                   systemImage: "chevron.up",
                   placement: .bottom,
                   isGuideVisible: isGuideVisible,
@@ -226,7 +226,7 @@ import SwiftUI
         ZStack {
           HStack(spacing: 0) {
             TouchActionHotspot(
-              title: "Previous",
+              title: L10n.string("nav.previous"),
               systemImage: "chevron.left",
               placement: .left,
               isGuideVisible: isGuideVisible,
@@ -237,7 +237,7 @@ import SwiftUI
             Spacer(minLength: 0)
 
             TouchActionHotspot(
-              title: "Next",
+              title: L10n.string("nav.next"),
               systemImage: "chevron.right",
               placement: .right,
               isGuideVisible: isGuideVisible,
@@ -252,7 +252,7 @@ import SwiftUI
             if !isGuideVisible {
               HStack(spacing: 0) {
                 TouchActionHotspot(
-                  title: "Guide",
+                  title: L10n.string("nav.guide"),
                   systemImage: "chevron.up",
                   placement: .bottom,
                   action: showGuide

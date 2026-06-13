@@ -33,13 +33,18 @@ struct GuideGroup: Identifiable, Hashable {
     let national = nativeChannels.filter { $0.jurisdictionLevel != .subnational }
 
     return [
-      GuideGroup(id: pinnedID, title: "Pinned", systemImage: "pin.fill", channels: pinned),
       GuideGroup(
-        id: "national", title: "National", systemImage: "globe.americas.fill", channels: national),
+        id: pinnedID, title: L10n.string("guide.group.pinned"), systemImage: "pin.fill",
+        channels: pinned),
       GuideGroup(
-        id: "regions", title: "Regions", systemImage: "building.columns.fill", channels: regions),
+        id: "national", title: L10n.string("guide.group.national"),
+        systemImage: "globe.americas.fill", channels: national),
       GuideGroup(
-        id: youtubeID, title: "YouTube", systemImage: "play.rectangle.fill",
+        id: "regions", title: L10n.string("guide.group.regions"),
+        systemImage: "building.columns.fill", channels: regions),
+      GuideGroup(
+        id: youtubeID, title: L10n.string("guide.group.youtube"),
+        systemImage: "play.rectangle.fill",
         channels: externalChannels),
     ].filter { !$0.channels.isEmpty }
   }
@@ -116,20 +121,20 @@ extension Channel {
   var liveStateLabel: String {
     if displayMode == .linkOut {
       if sourceType == .youtube {
-        return "YouTube"
+        return L10n.string("source.quality.youtube")
       }
-      return "Link-out"
+      return L10n.string("source.linkOut")
     }
 
     switch availability {
     case .alwaysOn:
-      return "Live"
+      return L10n.string("state.live")
     case .sittingOnly:
-      return "Sitting feed"
+      return L10n.string("state.sittingFeed")
     case .eventBased:
-      return "Event feed"
+      return L10n.string("state.eventFeed")
     case .unknown:
-      return "Signal only"
+      return L10n.string("state.signalOnly")
     }
   }
 
@@ -153,13 +158,13 @@ extension Channel {
   var sourceQualityLabel: String {
     switch sourceType {
     case .directHLS:
-      return "Official HLS"
+      return L10n.string("source.quality.officialHLS")
     case .directDASH:
-      return "DASH"
+      return L10n.string("source.quality.dash")
     case .officialPage:
-      return "Link out"
+      return L10n.string("source.quality.linkOut")
     case .youtube:
-      return "YouTube"
+      return L10n.string("source.quality.youtube")
     }
   }
 }

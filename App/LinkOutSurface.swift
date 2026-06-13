@@ -110,7 +110,7 @@ struct LinkOutSurface: View {
     }
     .buttonStyle(.plain)
     .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-    .help("Open official source")
+    .help(L10n.string("web.action.openOfficialSource"))
   }
 
   private var details: some View {
@@ -146,25 +146,28 @@ struct LinkOutSurface: View {
       Button {
         isShowingInAppSource = true
       } label: {
-        Label("Try in app", systemImage: "rectangle.connected.to.line.below")
+        Label(L10n.string("web.action.tryInApp"), systemImage: "rectangle.connected.to.line.below")
           .font(.headline)
       }
       .buttonStyle(.bordered)
       .tint(.white)
-      .help("Try loading this source inside the app")
+      .help(L10n.string("web.action.tryInApp"))
     #endif
   }
 
   private var title: String {
-    channel.sourceType == .youtube ? "Open on YouTube" : "Open source"
+    channel.sourceType == .youtube
+      ? L10n.string("web.action.openOnYouTube") : L10n.string("web.action.openSource")
   }
 
   private var buttonTitle: String {
-    channel.sourceType == .youtube ? "Open on YouTube" : "Open official source"
+    channel.sourceType == .youtube
+      ? L10n.string("web.action.openOnYouTube") : L10n.string("web.action.openOfficialSource")
   }
 
   private var openHint: String {
-    channel.sourceType == .youtube ? "Launch the channel page" : "Launch the external source"
+    channel.sourceType == .youtube
+      ? L10n.string("web.hint.launchChannelPage") : L10n.string("web.hint.launchExternalSource")
   }
 
   private var playButtonColor: Color {
@@ -206,14 +209,14 @@ private struct InAppSourceOverlay: View {
           .foregroundStyle(.white)
           .lineLimit(1)
 
-        Text("Experimental web view")
+        Text(L10n.string("web.inApp.experimental"))
           .font(.caption.weight(.bold))
           .foregroundStyle(.white.opacity(0.62))
 
         Spacer()
 
         Button(action: close) {
-          Label("Close", systemImage: "xmark")
+          Label(L10n.string("web.action.close"), systemImage: "xmark")
             .labelStyle(.iconOnly)
         }
         .buttonStyle(.plain)
@@ -221,7 +224,7 @@ private struct InAppSourceOverlay: View {
         .foregroundStyle(.white.opacity(0.82))
         .padding(9)
         .background(.white.opacity(0.12), in: Circle())
-        .help("Close web view")
+        .help(L10n.string("web.action.close"))
       }
       .padding(.horizontal, 18)
       .padding(.vertical, 12)
@@ -286,7 +289,7 @@ private struct WebSourceUnsupportedSurface: View {
       Image(systemName: "safari")
         .font(.system(size: 44, weight: .semibold))
 
-      Text("In-app web view is macOS-only for now")
+      Text(L10n.string("web.inApp.unsupported"))
         .font(.title3.weight(.bold))
     }
     .foregroundStyle(.white)

@@ -199,13 +199,16 @@ private enum SignalState: Equatable {
   func label(for channel: Channel) -> String {
     switch self {
     case .idle:
-      "Ready"
+      L10n.string("player.signal.ready")
     case .loading:
-      channel.availability == .alwaysOn ? "Tuning stream" : "Tuning stream, may be off air"
+      channel.availability == .alwaysOn
+        ? L10n.string("player.signal.loading") : L10n.string("player.signal.loadingMaybeOffAir")
     case .playing:
-      "Live"
+      L10n.string("player.signal.live")
     case .noSignal:
-      channel.availability == .alwaysOn ? "No signal" : "No signal, likely off air"
+      channel.availability == .alwaysOn
+        ? L10n.string("player.signal.noSignal")
+        : L10n.string("player.signal.noSignalLikelyOffAir")
     }
   }
 }

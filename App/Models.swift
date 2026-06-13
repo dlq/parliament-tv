@@ -14,9 +14,9 @@ enum JurisdictionLevel: String {
 
   var label: String {
     switch self {
-    case .national: "National"
-    case .subnational: "Subnational"
-    case .supranational: "Supranational"
+    case .national: L10n.string("jurisdiction.national")
+    case .subnational: L10n.string("jurisdiction.subnational")
+    case .supranational: L10n.string("jurisdiction.supranational")
     }
   }
 }
@@ -29,10 +29,10 @@ enum SourceType: String {
 
   var label: String {
     switch self {
-    case .directHLS: "Direct HLS"
-    case .directDASH: "Direct DASH"
-    case .officialPage: "Official page"
-    case .youtube: "YouTube"
+    case .directHLS: L10n.string("source.type.directHLS")
+    case .directDASH: L10n.string("source.type.directDASH")
+    case .officialPage: L10n.string("source.type.officialPage")
+    case .youtube: L10n.string("source.type.youtube")
     }
   }
 }
@@ -50,10 +50,10 @@ enum Availability: String {
 
   var label: String {
     switch self {
-    case .alwaysOn: "24/7"
-    case .sittingOnly: "Sitting only"
-    case .eventBased: "Event based"
-    case .unknown: "Unknown"
+    case .alwaysOn: L10n.string("availability.alwaysOn")
+    case .sittingOnly: L10n.string("availability.sittingOnly")
+    case .eventBased: L10n.string("availability.eventBased")
+    case .unknown: L10n.string("availability.unknown")
     }
   }
 }
@@ -65,9 +65,9 @@ enum TechnicalStatus: String {
 
   var label: String {
     switch self {
-    case .validated: "Validated"
-    case .linkOnly: "Link only"
-    case .needsReview: "Needs review"
+    case .validated: L10n.string("metadata.technical.validated")
+    case .linkOnly: L10n.string("metadata.technical.linkOnly")
+    case .needsReview: L10n.string("metadata.technical.needsReview")
     }
   }
 }
@@ -80,10 +80,10 @@ enum LegalReviewStatus: String {
 
   var label: String {
     switch self {
-    case .personalUsePendingReview: "Personal use only until reviewed"
-    case .explicitReuseWithConditions: "Explicit reuse allowed with conditions"
-    case .noncommercialPendingReview: "Noncommercial/personal use until reviewed"
-    case .embedOnly: "Embed only"
+    case .personalUsePendingReview: L10n.string("metadata.legal.personalUsePendingReview")
+    case .explicitReuseWithConditions: L10n.string("metadata.legal.explicitReuseWithConditions")
+    case .noncommercialPendingReview: L10n.string("metadata.legal.noncommercialPendingReview")
+    case .embedOnly: L10n.string("metadata.legal.embedOnly")
     }
   }
 }
@@ -99,13 +99,13 @@ enum MetadataLevel: String {
 
   var label: String {
     switch self {
-    case .signalStateOnly: "Signal state only"
-    case .scheduleTarget: "Schedule target"
-    case .agendaTarget: "Agenda target"
-    case .dailyScheduleTarget: "Daily schedule target"
-    case .currentEventTarget: "Current event target"
-    case .currentAndNextEventTarget: "Current and next event target"
-    case .youtubeCurrentEventTarget: "YouTube current event target"
+    case .signalStateOnly: L10n.string("metadata.level.signalStateOnly")
+    case .scheduleTarget: L10n.string("metadata.level.scheduleTarget")
+    case .agendaTarget: L10n.string("metadata.level.agendaTarget")
+    case .dailyScheduleTarget: L10n.string("metadata.level.dailyScheduleTarget")
+    case .currentEventTarget: L10n.string("metadata.level.currentEventTarget")
+    case .currentAndNextEventTarget: L10n.string("metadata.level.currentAndNextEventTarget")
+    case .youtubeCurrentEventTarget: L10n.string("metadata.level.youtubeCurrentEventTarget")
     }
   }
 }
@@ -122,14 +122,14 @@ enum ProgramConfidence: Hashable {
 
   var label: String {
     switch self {
-    case .low: "Low"
-    case .medium: "Medium"
-    case .high: "High"
-    case .signal: "Signal"
-    case .officialCalendar: "Official calendar"
-    case .officialWeeklySchedule: "Official weekly schedule"
-    case .officialLiveList: "Official live list"
-    case .officialSourceSchedule: "Official source schedule"
+    case .low: L10n.string("metadata.confidence.low")
+    case .medium: L10n.string("metadata.confidence.medium")
+    case .high: L10n.string("metadata.confidence.high")
+    case .signal: L10n.string("metadata.confidence.signal")
+    case .officialCalendar: L10n.string("metadata.confidence.officialCalendar")
+    case .officialWeeklySchedule: L10n.string("metadata.confidence.officialWeeklySchedule")
+    case .officialLiveList: L10n.string("metadata.confidence.officialLiveList")
+    case .officialSourceSchedule: L10n.string("metadata.confidence.officialSourceSchedule")
     }
   }
 }

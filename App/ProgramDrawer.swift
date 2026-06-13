@@ -31,15 +31,15 @@ struct ProgramDrawer: View {
       }
       .buttonStyle(.plain)
       .frame(maxWidth: .infinity, alignment: .center)
-      .help("Hide guide")
+      .help(L10n.string("guide.action.hide"))
 
       HStack(alignment: .firstTextBaseline, spacing: 14) {
-        Text("Parliaments")
+        Text(L10n.string("app.title"))
           .font(.caption.weight(.heavy))
           .foregroundStyle(.white.opacity(0.54))
           .textCase(.uppercase)
 
-        Text("\(channelCount) native sources")
+        Text(L10n.formatted("guide.count.nativeSources", channelCount))
           .font(.caption.weight(.semibold))
           .foregroundStyle(.white.opacity(0.44))
 
@@ -54,7 +54,7 @@ struct ProgramDrawer: View {
         if channel.displayMode == .nativePlayer {
           Button(action: togglePin) {
             Label(
-              isChannelPinned ? "Unpin channel" : "Pin channel",
+              isChannelPinned ? L10n.string("guide.action.unpin") : L10n.string("guide.action.pin"),
               systemImage: isChannelPinned ? "pin.fill" : "pin"
             )
             .labelStyle(.iconOnly)
@@ -66,7 +66,8 @@ struct ProgramDrawer: View {
           .background(
             isChannelPinned ? .white : .white.opacity(0.14), in: RoundedRectangle(cornerRadius: 6)
           )
-          .help(isChannelPinned ? "Unpin channel" : "Pin channel")
+          .help(
+            isChannelPinned ? L10n.string("guide.action.unpin") : L10n.string("guide.action.pin"))
         }
       }
 
@@ -276,26 +277,32 @@ private struct MiniGuideDetails: View {
     ViewThatFits(in: .horizontal) {
       HStack(alignment: .top, spacing: 18) {
         HStack(alignment: .top, spacing: 18) {
-          MiniGuideItem(title: "Now", value: channel.program.currentEventTitle)
+          MiniGuideItem(
+            title: L10n.string("guide.item.now"), value: channel.program.currentEventTitle)
 
           if let nextEventTitle = channel.program.nextEventTitle {
-            MiniGuideItem(title: "Next", value: nextEventTitle)
+            MiniGuideItem(title: L10n.string("guide.item.next"), value: nextEventTitle)
           }
         }
 
         Spacer(minLength: 18)
 
-        MiniGuideItem(title: "Audio", value: channel.language, alignment: .trailing, maxWidth: 150)
+        MiniGuideItem(
+          title: L10n.string("guide.item.audio"), value: channel.language, alignment: .trailing,
+          maxWidth: 150)
       }
 
       VStack(alignment: .leading, spacing: 10) {
-        MiniGuideItem(title: "Now", value: channel.program.currentEventTitle, maxWidth: 460)
+        MiniGuideItem(
+          title: L10n.string("guide.item.now"), value: channel.program.currentEventTitle,
+          maxWidth: 460)
 
         if let nextEventTitle = channel.program.nextEventTitle {
-          MiniGuideItem(title: "Next", value: nextEventTitle, maxWidth: 460)
+          MiniGuideItem(title: L10n.string("guide.item.next"), value: nextEventTitle, maxWidth: 460)
         }
 
-        MiniGuideItem(title: "Audio", value: channel.language, maxWidth: 460)
+        MiniGuideItem(
+          title: L10n.string("guide.item.audio"), value: channel.language, maxWidth: 460)
       }
     }
   }

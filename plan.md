@@ -510,7 +510,9 @@ Keep Netherlands, France, Denmark, Greece, Luxembourg, Mauritius, Italy, India, 
 - Better off-air detection.
 - Segment advancement checks.
 - Captions/audio language discovery.
-- i18n/l10n coverage for current stream and source-metadata languages: English, French, Portuguese, Danish, Dutch, Spanish, Greek, Luxembourgish, Italian, Hindi, Thai, Slovak, Mongolian, Inuktitut, Mandarin, and Māori.
+- Started: app-shell i18n/l10n scaffolding with `Localizable.xcstrings`, an `L10n` helper, and first-pass translations for shared labels, menus, guide controls, player status text, and external-source surfaces.
+- Current stream-language app-shell coverage: English, French, Portuguese, Danish, Dutch, Spanish, Greek, Luxembourgish, Italian, Hindi, Thai, Slovak, Mongolian, Inuktitut, Simplified Chinese, Traditional Chinese, and Māori. Treat this as review-needed coverage, especially for Inuktitut and other lower-resource locales where source-specific terminology should be validated with native speakers.
+- Continue i18n/l10n coverage for source metadata: channel names, schedule titles, audio labels, captions, scripts, accents, sorting, search, and fallback text.
 - Treat localization as two related layers: app-shell strings for the interface, and source metadata handling for channel names, schedule titles, audio labels, captions, scripts, accents, sorting, search, and fallback text.
 - Make sure the UI can render Latin text with diacritics and macrons, Greek, Devanagari, Thai, Cyrillic/Mongolian-related source text, Inuktitut syllabics where available, and Traditional/Simplified Chinese without clipping in guide cards, drawers, and compact phone layouts.
 - SwiftUI app hygiene still to cover.
