@@ -78,6 +78,7 @@ Tests/                Unit tests for catalogue, schedule adapters, and metadata
 Scripts/verify.sh     Local verification workflow
 plan.md               Product and implementation plan
 research.md           Research log for stream and schedule feasibility
+TESTFLIGHT.md         TestFlight checklist, beta notes, and release metadata draft
 docs/                 Public notices and source/provenance notes
 ```
 
