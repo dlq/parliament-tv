@@ -1,10 +1,3 @@
-//
-//  ProgramDrawer.swift
-//  Parliaments
-//
-//  Created by Codex on 2026-06-12.
-//
-
 import SwiftUI
 
 struct ProgramDrawer: View {

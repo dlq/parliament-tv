@@ -246,6 +246,20 @@ Plan before building:
 - Expose results as discovery affordances such as `Popular`, `Popular now`, or broad regional badges.
 - Evaluate CloudKit as one option: private database for synced preferences, public database for app-wide aggregate popularity records, and CloudKit Console telemetry/logs. CloudKit does not replace the privacy design.
 
+### Stream Availability History
+
+Plan before building:
+
+- Build this as app-wide data in Apple's cloud, most likely CloudKit public database records, so all users benefit from observed stream availability.
+- Use SwiftData as an optional local cache/offline staging layer, not as the primary long-term availability store.
+- Record lightweight observations of stream availability so sitting-only and event-based channels can be understood from actual app use.
+- Track channel ID, coarse observation time bucket, platform family, manifest result, media-segment result, playback-start result, observed state, error category, and schedule context if available.
+- Keep the model privacy-preserving: do not store account data, precise user location, raw IP address, device identifiers, watch duration, or per-user viewing histories.
+- Aggregate or threshold observations before showing them in the UI, so a single user's viewing pattern cannot become visible to others.
+- Use the shared history to improve UI labels such as `Usually off air overnight`, `Active during sittings`, `Last seen live`, or `Likely schedule-only`.
+- Distinguish stream states: healthy live playlist, reachable holding stream, off air with official page available, manifest missing, geo/auth blocked, network failure, and parser/player error.
+- Consider background/local refresh only where platform rules allow, and protect the CloudKit write path from noisy clients, repeated failures, or accidental high-volume reporting.
+
 ### Apple Frameworks To Revisit
 
 - `AVFoundation` / `AVKit`: access/error logs, media-selection groups, timed metadata, captions, audio-language discovery, PiP, and better live-state handling.
@@ -254,7 +268,7 @@ Plan before building:
 - `Vision`: OCR for bundled external-source screenshots or limited frame diagnostics.
 - `Speech`: live transcription/caption experiments only after legal, cost, and UX review.
 - `AppIntents`: shortcuts for opening pinned channels or groups.
-- `SwiftData`: pins, recents, overrides, and validation history if `AppStorage` becomes too small.
+- `SwiftData`: pins, recents, overrides, stream availability history, and validation history if `AppStorage` becomes too small.
 - `BackgroundTasks`: local refresh where platform rules allow; prefer server-side validation for durable monitoring.
 - `GroupActivities` / SharePlay: synchronized watching as later research.
 - Foundation Models: optional metadata extraction and summarization on supported platforms, not tvOS-first MVP infrastructure.

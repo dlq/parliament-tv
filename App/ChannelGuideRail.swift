@@ -1,10 +1,3 @@
-//
-//  ChannelGuideRail.swift
-//  Parliaments
-//
-//  Created by Codex on 2026-06-13.
-//
-
 import SwiftUI
 
 struct HorizontalGuide: View {

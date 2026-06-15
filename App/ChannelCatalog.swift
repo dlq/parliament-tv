@@ -1,10 +1,3 @@
-//
-//  ChannelCatalog.swift
-//  Parliaments
-//
-//  Created by Darcy Quesnel on 2026-05-12.
-//
-
 import Foundation
 
 enum ChannelCatalog {
