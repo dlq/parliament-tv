@@ -27,4 +27,4 @@ jobs:
         run: make format-check
 
       - name: Run macOS tests
-        run: make test
+        run: make test XCODEBUILD_TEST_SETTINGS="CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="
