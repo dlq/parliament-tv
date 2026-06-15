@@ -8,7 +8,7 @@ This project is preparing an early TestFlight build for reviewer feedback on the
 - Bundle ID: `ca.dlq.parliaments`
 - SKU: `ca.dlq.parliaments`
 - Primary language: English (Canada)
-- First build focus: iOS/iPadOS. macOS and tvOS are present in the project, but can be added to TestFlight after archive and asset checks are clean.
+- First build focus: iOS/iPadOS, macOS, and tvOS internal TestFlight builds.
 - User access: Full Access for the initial app record unless App Store Connect roles need to be restricted.
 
 ## Beta Description
@@ -50,12 +50,11 @@ Before uploading a build:
 2. Run `make verify`.
 3. Confirm `PRODUCT_BUNDLE_IDENTIFIER` is `ca.dlq.parliaments`.
 4. Confirm `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` are correct for the upload.
-5. Archive iOS/iPadOS first and upload through Xcode Organizer.
-6. Add macOS and tvOS archives after platform-specific assets and archive signing are clean.
+5. Archive iOS/iPadOS, macOS, and tvOS through Xcode Organizer as needed.
+6. For tvOS, confirm the archive includes the native `App Icon & Top Shelf Image` brand asset collection.
+7. Confirm each platform upload appears in App Store Connect/TestFlight before inviting testers.
 
 ## Known Pre-TestFlight Follow-Ups
 
-- Add tvOS-specific App Icon and Top Shelf brand assets before tvOS TestFlight.
-- Confirm production signing and provisioning in Xcode with the Apple Developer team.
 - Fill App Store Connect privacy answers from `PRIVACY.md`.
 - Keep beta review notes clear that the app is an unofficial viewer for public official sources.

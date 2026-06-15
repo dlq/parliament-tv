@@ -2,6 +2,8 @@
 
 This is a working research log, not an endorsed stream directory or legal assessment. It includes successful checks, failed checks, stale candidates, third-party references, and notes that require revalidation before reuse in a public catalogue, app release, or advocacy material.
 
+Use this file as evidence and background. The live product roadmap, implementation status, and release checklist are maintained in `plan.md` and `TESTFLIGHT.md`.
+
 Date researched: 2026-05-12  
 Goal: determine whether an app can flip between publicly available, open streams of parliamentary activity around the world, with initial coverage across national, sub-national, and supra-national legislatures.
 
@@ -627,243 +629,61 @@ Engineering interpretation for this tier:
 - For an app, do not mix first-party parliamentary feeds, public-broadcaster relays, and third-party mirrors under one generic "stream" label. Store `source_owner` and `legal_review_status`.
 - Several candidates are sitting-only. A validator should distinguish "404 because no sitting is active" from "broken URL"; this requires scheduled rechecks during known plenary hours.
 
-## Implementation implications for a future app
+## Implementation implications
 
-## Pre-implementation risk review
+The implementation roadmap, current app state, source model, UI plan, release plan, and future engineering work now live in `plan.md`. This research file intentionally keeps the evidence: source validation, schedule discovery, terms notes, comparable-app observations, and candidate-source research.
+
+Do not treat the older research findings below as the current implementation plan without checking `plan.md` and the code.
+
+### Pre-implementation evidence retained
 
 Date of pass: 2026-05-12.
 
-This pass checked the risks identified after the tier research: playback/CORS, terms of use, schedules, YouTube integration, source-quality taxonomy, and remaining product risks.
+This pass checked playback/CORS, terms, schedules, YouTube integration, and source-quality risks for the first likely app sources. The implementation recommendations have moved to `plan.md`; these notes remain as evidence.
 
-### Playback and CORS probe
+Playback/CORS probe:
 
-A full Playwright/browser decode was not available in the original research workspace. Instead, the pass used a browser-like HTTP probe with an `Origin` header against the likely MVP direct-stream candidates. This is not a substitute for testing `<video>`/`hls.js` playback in Chrome, Safari, and mobile Safari, but it catches the first-order blockers: HTTP status, content type, CORS headers, and playlist shape.
+- A browser-like HTTP probe with an `Origin` header was used against likely direct-stream candidates.
+- The probe checked HTTP status, content type, CORS headers, and playlist shape.
+- CPAC, Quebec, Ontario, New Zealand, Denmark, Netherlands, Portugal, Spain, Greece, Luxembourg, Mauritius, France, Italy, India, Brazil, Thailand, and Slovakia returned HTTP 200 HLS responses in that pass.
+- Most returned permissive `Access-Control-Allow-Origin` headers or reflected the test origin.
+- Real app playback still needs periodic revalidation because segment-level CORS, geo behavior, off-air states, and player compatibility can drift.
 
-Result: all tested direct HLS candidates returned HTTP 200 and had permissive or origin-reflecting CORS headers.
+Terms and reuse signals:
 
-| Channel | HTTP/content | CORS signal | Playlist signal | App risk |
-| --- | --- | --- | --- | --- |
-| CPAC | 200 `application/vnd.apple.mpegurl` | `Access-Control-Allow-Origin: *` | HLS master, 4 variants | Technically strong; terms are restrictive, so do legal review before public redistribution. |
-| Quebec canal05 | 200 HLS | `*` | HLS master, 1 variant | Technically strong; non-commercial/reasonable-use terms. |
-| Ontario house-en | 200 HLS | `*` | HLS master, 1 variant | Technically strong; non-commercial/excerpt terms need care for app framing. |
-| New Zealand Parliament TV | 200 HLS | Reflected test origin | HLS master, 6 variants | Technically strong; terms explicitly allow broadcast/rebroadcast under conditions. |
-| Denmark Folketinget | 200 HLS | `*` | HLS master, 1 variant | Technically strong; still needs terms review. |
-| Netherlands Tweede Kamer | 200 HLS | `*` | HLS master, 5 variants | Technically strong; includes `Range`/token-related CORS headers. |
-| Portugal ARTV | 200 HLS | `*` | HLS master, 1 variant | Technically strong; terms review still needed. |
-| Spain Congreso | 200 HLS | `*` | HLS master, 1 variant | Technically strong; terms review still needed. |
-| Greece Hellenic Parliament TV | 200 HLS | `*` | HLS master, 5 variants | Technically strong; terms review still needed. |
-| Luxembourg Chamber TV | 200 HLS | `*` | HLS master, 5 variants | Technically strong; terms review still needed. |
-| Mauritius Parliament TV | 200 HLS | `*` | HLS master, 4 variants | Technically strong; terms review still needed. |
-| France National Assembly | 200 HLS | `*` | Live media playlist, 3 segments | Technically strong; single live playlist rather than master. |
-| Italy Senate | 200 HLS | `*` | HLS master, 5 variants | Technically strong; terms review still needed. |
-| India Sansad TV 1 | 200 HLS | `*` | HLS master, 5 variants | Technically strong; terms and geo/reliability review still needed. |
-| Brazil TV Camara | 200 HLS | `*` | Live media playlist, 3 segments | Technically strong and terms look unusually permissive for legislative activities. |
-| Thailand Parliament TV | 200 HLS | `*` | HLS master, 6 variants | Technically strong; terms and geo/reliability review still needed. |
-| Slovakia TV NRSR | 200 HLS | `*` | HLS master, 1 variant | Technically strong; likely public-broadcaster distribution rather than first-party. |
-
-Implementation note: direct HLS playback still needs real browser testing. The probe suggests these are likely compatible with `hls.js` on desktop Chromium/Firefox and native HLS on Safari, but segment-level CORS and mixed-content handling must be verified in a real app.
-
-### Terms and reuse policy findings
-
-Terms are the largest non-technical risk. The app should not infer permission from an accessible manifest.
-
-| Source | Terms signal | App implication |
+| Source | Evidence signal | Research implication |
 | --- | --- | --- |
-| CPAC | CPAC terms cover audio-video feeds and other content as protected content owned by CPAC/licensors; terms are website-use oriented and CPAC can suspend access. Source: `https://www.cpac.ca/terms-of-use` | Treat as playable official source for personal use/prototype; do not present as openly reusable without permission. |
-| Quebec Assembly | Content, including video/audio, may be reproduced without fees if use is reasonable, fair, non-commercial, unmodified, non-prejudicial, and credited; debates may be reproduced subject to the National Assembly Act, while other use may need authorization. Source: `https://www.assnat.qc.ca/fr/propos-site/droits-propriete-intellectuelle.html` | Good local exception for a non-commercial app/prototype; commercial/public product needs review. |
-| Ontario Assembly | Electronic channels include video streaming services; excerpts may be used if reasonable, fair, non-commercial, credited, and subject to parliamentary privilege/IP limits. Source: `https://www.ola.org/en/office-assembly/copyright-privacy` | Good local exception for non-commercial app/prototype; be careful about full-stream rebroadcast framing. |
-| UK Parliamentlive.tv | Help page says embedding capability is temporarily suspended; live coverage remains on Parliamentlive.tv and UK Parliament YouTube and can be linked. Conditions restrict use to fair and accurate reports, prohibit many commercial/advertising uses, and recordings are personal-use oriented. Sources: `https://www.parliament.uk/site-information/using-this-website/help/parliamentlivetv-help/`, `https://www.parliament.uk/site-information/copyright-parliament/pru-licence-agreements/downloading--sharing-terms--conditions/` | Use official page links or YouTube fallback first. Avoid embedding raw Parliamentlive players until terms and current embed availability are confirmed. |
-| European Parliament | Multimedia Centre says live streaming, VOD, downloads, and iframe embed codes are available; content is described as open/free with source attribution in EP news material, but live embed codes may need advance request. Sources: `https://www.europarl.europa.eu/website/multimedia-centre/en/webstreaming.html`, `https://www.europarl.europa.eu/news/en/media-services/multimedia-centre` | Strong official fallback. Prefer official embed/player and schedule integration over raw manifest extraction. |
-| New Zealand Parliament TV | Terms explicitly allow live coverage to be made available for broadcast, webcast, and recording, with restrictions against misleading use, commercial advertising/sponsorship, and legal non-compliance. Source: `https://www3.parliament.nz/en/get-involved/information-for-the-press/parliament-tv-terms-and-conditions/` | One of the cleanest direct HLS candidates. |
-| Brazil TV Camara | Terms say live retransmissions of legislative activities generated by the Chamber are under CC BY 4.0; watermark/source must not be removed. Other programs use more restrictive CC BY-NC-ND. Source: `https://www.camara.leg.br/tv/termos-de-uso/` | Very strong candidate for lawful app integration of legislative activity streams if attribution and watermark integrity are preserved. |
-| YouTube sources | YouTube embeds are governed by YouTube API/player terms; privacy-enhanced mode is available via `youtube-nocookie.com`; autoplay has privacy and browser-policy implications. Sources: `https://developers.google.com/youtube/player_parameters`, `https://developers.google.com/youtube/iframe_api_reference`, `https://support.google.com/youtube/answer/57788` | Use official embeds, not extracted YouTube HLS. Expect branding, cookie/consent, autoplay, ad, and availability constraints. |
+| CPAC | CPAC terms describe audio/video feeds and other content as protected content owned by CPAC/licensors. | Treat as personal-use/prototype until permission is reviewed. |
+| Quebec Assembly | Official terms allow reasonable, fair, non-commercial, credited use under conditions. | Strong local-priority candidate, but still needs careful public-product framing. |
+| Ontario Assembly | Official copyright/privacy page allows reasonable, fair, non-commercial excerpts with credit and parliamentary privilege/IP limits. | Strong local-priority candidate, but full-stream framing needs care. |
+| UK Parliamentlive.tv | Official help says embedding capability was temporarily suspended; live coverage remains on Parliamentlive.tv and YouTube. | Prefer official page links or YouTube fallback until embed/raw-player permission is clear. |
+| European Parliament | Multimedia Centre offers live streaming, VOD, downloads, and iframe/embed workflows with source attribution expectations. | Strong official fallback and schedule target. |
+| New Zealand Parliament TV | Terms explicitly allow live coverage to be made available for broadcast, webcast, and recording under restrictions. | One of the cleanest direct HLS candidates. |
+| Brazil TV Camara | Live retransmissions of legislative activities are described as CC BY 4.0, with source/watermark integrity requirements. | One of the strongest lawful direct-HLS candidates if attribution is preserved. |
+| YouTube sources | YouTube embeds are governed by YouTube player/API/platform terms. | Use official embeds or link-outs; do not extract YouTube HLS manifests. |
 
-### Schedule and live-state research
+Schedule/live-state discovery:
 
-The app should not just show a static list of streams. It needs live-state and schedule metadata because many channels are sitting-only or event-based.
-
-| Source | Schedule/live-state signal | App implication |
+| Source | Observed schedule surface | Research implication |
 | --- | --- | --- |
-| CPAC | `https://www.cpac.ca/schedule` exposes a full schedule with time-zone controls and program entries, including House of Commons Proceedings, Senate Proceedings, Question Period, committees, and Public Record. | Scrape or manually ingest schedule cards; CPAC is TV-like and 24/7, but "parliamentary activity now" still needs program classification. |
-| Quebec Assembly | Official live-list API previously returned active channels/events, and official pages link parliamentary work to video. Public pages also expose weekly parliamentary calendars. | Use the live-list API for current active streams; use weekly calendar pages as a fallback. |
-| Ontario Assembly | Official calendar page lists House and committee events and includes watch-livestream markers. Official watch page states live streaming covers all House proceedings and some committee rooms. Sources: `https://www.ola.org/en/legislative-business/calendar`, `https://www.ola.org/en/get-involved/watch-legislature-action` | Strong schedule integration candidate. Map events to known `house`, `rm151`, `committee_1`, `committee_2`, and media streams. |
-| UK Parliament | Parliamentlive.tv has Brief Guide, Full Event Guide, Commons/Lords/committee pages, RSS of recent events, and official help. Sources: `https://www.parliamentlive.tv/Guide`, `https://www.parliament.uk/site-information/using-this-website/help/parliamentlivetv-help/` | Treat UK as schedule-first official-player integration, not raw stream integration. |
-| European Parliament | Multimedia Centre has a streaming schedule and can provide iframe embed codes; audiovisual services mention simultaneous streaming of many rooms. Sources: `https://multimedia.europarl.europa.eu/en?lang=en`, `https://www.europarl.europa.eu/website/multimedia-centre/en/webstreaming.html` | Treat as schedule-first official-player integration with multilingual metadata. |
-| New Zealand Parliament | Help page says PTV broadcasts live during House sittings and points users to the Parliament Calendar for dates/times. Source: `https://www.parliament.nz/en/footer/website-help/the-parliament-tv-help-page/` | Pair direct HLS with sitting calendar to avoid showing a dead or uninteresting channel. |
-| UK/EP/YouTube fallbacks | Official pages often know upcoming event state better than raw players. | The channel model needs `schedule_url`, `schedule_source_type`, and `current_event` separate from `playback_url`. |
+| CPAC | Daily schedule page with program entries and timezone controls. | Strong TV-like schedule source. |
+| Quebec Assembly | Official live/upcoming webdiffusion JSON methods. | Strong current/upcoming event source; needs channel mapping. |
+| Ontario Assembly | Official legislative calendar and watch pages. | Useful calendar source for House/committee streams. |
+| UK Parliamentlive.tv | Guide pages, event details, room labels, and feeds. | Strong schedule-first source even without raw HLS playback. |
+| European Parliament | Multimedia Centre webstreaming schedule and player infrastructure. | Strong schedule-first official player target; exact REST calls still need extraction. |
+| New Zealand Parliament | Parliament calendar, House next-meeting state, and sitting programme surfaces. | Good partner for direct HLS. |
+| Brazil TV Camara | Weekly programming table with time/program rows and `AO VIVO` labels. | Good weekly schedule source. |
+| Portugal ARTV | Official agenda app with export signals. | Promising but needs session/export handling. |
+| Spain Congreso | Weekly Canal Parlamento programming pages. | Scrapeable, but portal structure adds friction. |
+| YouTube-backed sources | Channel live pages, scheduled events, and API/player surfaces where allowed. | Useful fallback, not a stable universal EPG. |
 
-### Schedule metadata discovery pass
+YouTube research model:
 
-Date of pass: 2026-06-06.
-
-Goal: estimate how much "EPG-like" information the app can reasonably get from official sources, without assuming every source has a cable-TV-style programme guide.
-
-Conclusion: a focused MVP can have useful now/next or daily schedule metadata. A universal EPG is unrealistic, but an "EPG-lite" layer is feasible for the strongest official sources. The schedule layer should be source-specific adapters rather than one generic parser.
-
-| Source | Official schedule surface | Format observed | Metadata available | Confidence | Adapter difficulty | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| CPAC | `https://www.cpac.ca/schedule/` | Server-rendered HTML | Daily TV-style schedule, UTC `data-airdate`, title, description, timezone controls. | High | Low-medium | Strongest TV-like schedule. Need classify whether current show is parliamentary, committee, public record, or rebroadcast. |
-| Assemblee nationale du Quebec | `https://www.assnat.qc.ca/fr/video-audio/index.html`; JSON methods under `/Gabarits/RefonteVA_Accueil.aspx/ObtenirListeEnDirect` and `/ObtenirListeAVenir` | Official JSON responses | Current live webdiffusions and upcoming webdiffusions with date, time range, committee/chamber labels, and titles. | High | Medium | Very good local source. Needs French time parsing and mapping events to the correct `canalNN` stream. On a non-sitting Saturday, live list returned empty and upcoming list returned multiple June 8-10, 2026 events. |
-| Legislative Assembly of Ontario | `https://www.ola.org/en/legislative-business/calendar` | Drupal server-rendered calendar HTML with day/week/month navigation and AJAX view plumbing | House and committee events by day, plus watch/live context from official watch pages. | Medium-high | Medium | Curl needs a browser user-agent. Good MVP source, but stream-to-room mapping still needs testing on sitting days. |
-| UK Parliament / Parliamentlive.tv | `https://www.parliamentlive.tv/Guide`, `/Guide/EpgDay?date=...`, `/Guide/EpgInfo/<eventId>`, `http://data.parliamentlive.tv/api/event/feed` | HTML guide partials, event pages, Atom feed | Channel lanes, event IDs, rooms, chamber/committee labels, day schedule, event details, agenda items, start/end times on event pages. | High | Medium | Best true EPG-like source found. Playback remains official-player/YouTube-first, but metadata is strong enough for a channel guide. |
-| European Parliament | `https://multimedia.europarl.europa.eu/en/webstreaming` | Next.js SSR plus API config for `api.multimedia.europarl.europa.eu` and `/o/epmp-frontend-rest/v1.0` | Streaming agenda for plenaries, committees, press conferences, and events. | High-promise | Medium-high | Strong schedule target. Exact REST endpoint still needs extraction from Next.js chunks or network inspection. Watchity player config is visible in page data. |
-| New Zealand Parliament | `https://www3.parliament.nz/en/calendar/`; `https://www3.parliament.nz/en/pb/meetings-of-parliament/` | Official calendar HTML, RSS/export links, House sitting programme export | Current "House next meets" state, day/week/month calendar, committee events, House Business filters, sitting programme export, normal sitting hours. | High | Medium | Good partner for direct Parliament TV HLS. Calendar says next meeting and exposes event rows; urgency/extended hours can change late and must be refreshed. |
-| Brazil TV Camara | `https://www.camara.leg.br/tv/programacao-semanal` | Static weekly HTML tables | Weekly programme schedule with time/program rows and explicit `AO VIVO` labels. | High | Low | Strong lawful/technical candidate if attribution and terms are respected. Easy EPG-lite adapter. |
-| Portugal Assembleia da Republica | `https://agenda.parlamento.pt/` | Official agenda app with AJAX handlers and export options | Structured agenda by section, XML/JSON/PDF export options, ICS-style content download path. | High-promise | Medium | Requires session/XSRF handling for structured export. Good later adapter because the source is explicitly agenda-oriented. |
-| Spain Congreso | `https://www.congreso.es/en/programacion` | Liferay portlet HTML | Canal Parlamento weekly programming pages and date-driven schedule URLs. | Medium-high | Medium | Scrapeable, but Liferay portlet shape adds mechanical complexity. |
-| France Assemblee nationale | `https://www.assemblee-nationale.fr/seance/` | Official HTML agenda pages plus PDF agenda documents | Order of business, commission agendas, future scheduling PDFs. | Medium | Medium-high | Good official metadata exists, but less channel-like. Direct page is video-first; schedule likely needs agenda/PDF parsing. |
-| Netherlands Tweede Kamer | `https://www.tweedekamer.nl/contact-en-bezoek/volg-de-tweede-kamer-online`, linked plenary/committee agenda pages, Debat Direct | Official pages and app/site links | Official live/replay and debate agenda surfaces are clearly linked. | Medium-promise | Medium-high | Needs a follow-up pass against plenary/committee pages and Debat Direct to identify structured endpoints. |
-| Denmark Folketinget | Official TV/schedule pages | Not fetched successfully in this environment | Likely official plenary/meeting schedule. | Unknown | Unknown | Official site returned 403 to curl, even with a browser user-agent. Needs browser/manual pass before classification. |
-| Australia APH | `https://www.aph.gov.au/News_and_Events/Watch_Read_Listen` and APH calendar/watch surfaces | Not fetched successfully in this environment | Likely calendar plus official watch surfaces; YouTube scheduled streams may help. | Medium-promise | Medium-high | Official APH pages returned 403 to curl. Needs browser/manual pass and/or YouTube scheduled-live investigation. |
-| YouTube-backed sources | Official YouTube channel live pages and scheduled events | YouTube web/API surfaces | Current live state, scheduled live events, titles, thumbnails, channel identity when API access is available. | Medium | Medium-high | Useful fallback, but not a stable EPG. Avoid extracted manifests; use official embed/player semantics. |
-
-Practical metadata tiers for the MVP:
-
-| Tier | Sources | App behavior |
-| --- | --- | --- |
-| Strong now/next and daily schedule | CPAC, Quebec, UK Parliamentlive, New Zealand, Brazil TV Camara | Show now/next overlay, upcoming rail, off-air/upcoming states, and refresh on a timer. |
-| Good but needs endpoint extraction | European Parliament, Portugal, Spain, Ontario | Include behind feature flags or adapter spikes; promote once parsing survives a sitting-day test. |
-| Official but less channel-like | France, Netherlands, Australia, Denmark | Keep as source-detail cards or link-out/official-player entries until structured metadata and playback behavior are validated. |
-| Weak/no schedule | Raw HLS feeds with no official calendar mapping | Show signal state only: online/offline, last validated time, and source page link. |
-
-Recommended adapter order:
-
-1. CPAC schedule adapter.
-2. Quebec webdiffusion live/upcoming adapter.
-3. UK Parliamentlive guide adapter.
-4. New Zealand calendar/sitting adapter.
-5. Ontario calendar adapter.
-6. Brazil TV Camara weekly schedule adapter.
-7. European Parliament webstreaming adapter after extracting exact REST calls.
-8. Portugal and Spain agenda/programming adapters.
-
-Implementation notes:
-
-- Store schedules independently from playback URLs. Some of the best schedules belong to sources whose playback path is official-player or YouTube rather than direct HLS.
-- Normalize all events to source timezone plus UTC start/end. Display in the user's locale but keep source-local times available because parliamentary schedules are often published that way.
-- Add confidence and freshness fields. A Saturday "no live event" result is valid, not a stream failure.
-- Expect late changes. Parliamentary schedules move, sit under urgency, or add extended hours; adapters should refresh more aggressively near sitting times.
-- Keep a manual override path for MVP launch. A small curated channel lineup can tolerate hand-corrected channel-to-room mappings while parser confidence improves.
-
-### YouTube channel-surfing model
-
-YouTube is viable, but it is not the same as HLS channel surfing.
-
-Recommended model:
-
-- Store YouTube as `source_type: youtube_embed`, not `direct_hls`.
-- Prefer official channel handles/playlists and official site embeds.
-- Use a `youtube_channel_id`, optional `default_live_video_id`, and optional `live_playlist_id`.
-- Resolve "what is live now" by page/API discovery, not by assuming one permanent video id unless the legislature uses one.
+- Store YouTube as an external/platform source, not a direct HLS source.
+- Prefer official channel handles, playlists, source pages, and official embeds.
+- Resolve active live events through allowed page/API/player behavior rather than fixed manifest extraction.
+- Expect ads, consent prompts, regional blocks, embedding restrictions, changing live IDs, and autoplay constraints.
 - Use `youtube-nocookie.com` where possible for privacy-enhanced embeds.
-- Use the IFrame Player API with `enablejsapi=1` and `origin=<app-origin>` if building custom controls.
-- Expect autoplay to be blocked unless muted or initiated by user gesture; the YouTube IFrame API exposes `onAutoplayBlocked`.
-- Do not extract or proxy YouTube HLS manifests. That would be brittle and likely contrary to platform rules.
-
-YouTube integration risks:
-
-- Live events can end and be replaced with a new video id.
-- Some channels use playlists; others use fixed "live" URLs; some schedule one-off events.
-- Ads, overlays, branding, captions, age restrictions, embedding-disabled videos, regional blocks, and cookie consent can interrupt a TV-like UX.
-- YouTube embeds require a minimum viewport and visible controls/branding constraints. They should be a channel-card player mode, not hidden background plumbing.
-
-### Source-quality taxonomy
-
-Use these fields from the beginning:
-
-```text
-source_type:
-  direct_hls
-  direct_dash
-  official_embed
-  official_page
-  youtube_embed
-  app_store_app
-
-source_owner:
-  first_party_legislature
-  official_vendor
-  official_public_broadcaster
-  official_youtube
-  official_social
-  third_party_relay
-  community_playlist
-
-legal_review_status:
-  not_reviewed
-  personal_use_only
-  noncommercial_with_attribution
-  explicit_reuse_allowed
-  embed_only
-  link_only
-  permission_required
-  avoid
-
-technical_status:
-  validated_playlist
-  validated_browser_playback
-  cors_ok
-  active_now
-  inactive_sitting_only
-  blocked
-  geo_blocked
-  broken
-  unknown
-
-schedule_source_type:
-  none
-  official_calendar
-  official_live_api
-  official_schedule_page
-  youtube_api
-  manual
-```
-
-Minimum channel fields to add beyond the earlier model:
-
-```text
-display_mode: native_player | iframe | youtube | link_out
-schedule_url
-terms_url
-attribution_text
-requires_user_gesture
-supports_captions
-audio_languages
-caption_languages
-last_browser_playback_check_at
-last_legal_review_at
-```
-
-### Additional product risks
-
-- Commercialization: several promising sources are explicitly non-commercial or prohibit commercial sponsorship/advertising near proceedings.
-- Re-broadcast framing: even where viewing is public, framing a raw stream inside another app may count differently than linking or using supplied embed code.
-- Parliamentary privilege: many jurisdictions preserve privilege and integrity rules for proceedings; edited clips, overlays, commentary, or misleading context can be restricted.
-- Attribution and watermark integrity: Brazil and Quebec explicitly care about source attribution; Brazil explicitly prohibits removing/suppressing the Chamber watermark.
-- Internationalization: captions, simultaneous interpretation, sign language, and floor/original audio should be modeled early, especially for CPAC, European Parliament, Luxembourg, and multilingual parliaments.
-- Accessibility: some sources have captions but expose them through sidecar WebVTT or player-specific captions; CORS must be checked for caption files too.
-- Live/off-air UX: a sitting-only stream can be technically healthy and still show no event. The UI needs states like `off air`, `next sitting`, `rebroadcast`, `live`, and `unknown`.
-- Monitoring burden: stream URLs will drift. Treat all direct URLs as monitored data with automated revalidation and manual override.
-- Jurisdictional geo behavior: Malaysia, BBC Parliament, and some public-broadcaster relays may return 200 from one location and fail elsewhere.
-- User trust: distinguish first-party legislature, official broadcaster, official YouTube, and third-party/community relay visibly.
-
-### Recommended next build gate
-
-Before building broad catalogue features, create a tiny playback spike with:
-
-1. Direct HLS: CPAC, Quebec, Ontario, New Zealand, Brazil.
-2. Official iframe/page: UK Parliamentlive.tv, European Parliament.
-3. YouTube: Australia or Taiwan.
-4. Schedule/live state: Ontario calendar, CPAC schedule, UK Parliamentlive Guide.
-5. Legal labels: CPAC `permission_required/personal-use caution`, Quebec/Ontario `noncommercial`, New Zealand/Brazil `explicitly usable with conditions`, YouTube `platform embed`.
-
-Pass criteria:
-
-- Desktop Chrome plays all direct HLS via `hls.js`.
-- Safari plays direct HLS natively.
-- YouTube channel card can be swapped with keyboard/controller-like channel controls.
-- Off-air streams show a clear state instead of looking broken.
-- Every channel displays source owner, terms status, and official-source link.
 
 ### Comparable app and UI references
 
@@ -883,46 +703,16 @@ Polished large-screen references:
 - Apple's [tvOS 26 design direction](https://images.apple.com/uk/newsroom/2025/06/apple-tv-brings-a-beautiful-redesign-and-enhanced-home-entertainment-experience/) emphasizes keeping focus on what is playing with unobtrusive UI. That fits this app better than card-heavy browsing.
 - Netflix's Apple TV custom-player changes drew criticism because they removed familiar native tvOS affordances. The lesson is to stay close to AVPlayer/native tvOS playback behavior where possible.
 
-UI ideas to steal:
+UI ideas to carry forward:
 
 - Full-screen video first, metadata overlays second.
 - Remote-first channel up/down.
-- A horizontal now/next rail instead of a dense EPG grid for MVP.
+- A horizontal now/next rail instead of a dense EPG grid.
 - On-player mini guide: current channel, current event, next event, source, language/captions.
-- Favorites/local priority pinning for Quebec, Ontario, and CPAC.
-- Visible but restrained source-quality badges: `Official HLS`, `Official vendor`, `Official YouTube`, `Link out`, `Schedule only`.
-- Intentional off-air states: `Off air`, `Next sitting at 10:00`, `Schedule unavailable`, or `Signal available, program unknown`.
-- Avoid hiding source trust. First-party parliament video, official broadcaster feeds, official YouTube, and third-party relays should look distinct.
-
-Use a channel model like:
-
-```text
-id
-name
-jurisdiction_level: national | subnational | supranational
-country_or_region
-legislature
-source_type: direct_hls | direct_dash | official_iframe | official_page | youtube | app_only
-source_owner: first_party | official_vendor | third_party
-playback_url
-official_url
-source_status: verified | candidate | blocked | broken | auth_required
-availability: 24_7 | sitting_only | event_based | unknown
-geo_notes
-auth_notes
-last_checked_at
-validation_result
-```
-
-Recommended minimum viable channel list:
-
-1. CPAC: official content-store HLS, with CPAC live page fallback.
-2. Quebec Assembly: 14 official-vendor HLS channels plus official live-list API metadata.
-3. Ontario: 6 official-vendor HLS channels plus official iframe fallback.
-4. UK Parliament: official Parliamentlive.tv route, likely event/schedule driven.
-5. European Parliament: official Multimedia Centre webstreaming route, schedule driven.
-6. French Assembly/LCP: official Assembly video portal and LCP direct page.
-7. C-SPAN: mark as official/event-source only; avoid unauthenticated TV-network relays.
+- Favorites/local priority pinning.
+- Visible but restrained source-quality badges.
+- Intentional off-air states.
+- Strong source-trust distinctions between first-party, official broadcaster, official YouTube, and third-party/community relay sources.
 
 ## Open questions / next research tasks
 
