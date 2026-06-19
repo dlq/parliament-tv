@@ -1,116 +1,120 @@
 # Parliaments
 
-Parliaments is an experimental SwiftUI app for surfing curated public parliamentary video sources. It is built as a proof of usefulness for open, predictable live streams and schedule metadata from legislatures.
+Parliaments is a documentation and data project for public parliamentary
+video sources. It records the stream endpoints, official pages, schedule/EPG
+surfaces, scraper notes, and rights/permission evidence found while researching
+open parliamentary video access.
 
-The app currently targets macOS, iOS/iPadOS, and tvOS from one SwiftUI/Xcode project. It favours native AVPlayer-compatible HLS streams when available, and separates sources that require YouTube, a web player, DASH, or an external official page.
+The repository is intended to be a public, inspectable catalogue and research
+record.
 
-## Status
+## What Is Here
 
-This is a prototype. Source availability, stream URLs, schedules, and terms can change without notice. The catalogue is intentionally curated and conservative; it is not a complete directory of parliamentary video.
+- `data/channels.json`: canonical source catalogue.
+- `parliament_streams/scrapers/`: Python parsers for the schedule/EPG sources
+  already understood by the prototype.
+- `docs/sources-and-provenance.md`: source ownership, reuse, and provenance
+  boundaries.
+- `docs/source-rights-and-permissions.md`: source-by-source permission and
+  rights evidence.
+- `research.md`: working research log for stream discovery and source notes.
+- `plan.md`: current roadmap for the documentation/data project.
+- `tests/`: data-contract and scraper-registry tests.
 
-This project is not affiliated with, endorsed by, or sponsored by any parliament, legislature, broadcaster, streaming vendor, or video platform.
+## Catalogue Scope
 
-## Current Capabilities
+The catalogue includes:
 
-- Native HLS playback for validated parliamentary streams.
-- macOS-only experimental DASH playback path.
-- Channel groups for pinned, national, regional, and YouTube/link-out sources.
-- Now/next metadata where an official schedule source has been wired.
-- Official-source cards for YouTube and other non-native sources.
-- Shared SwiftUI interface across macOS, iOS/iPadOS, and tvOS.
-- `swift-format` based formatting/linting and Xcode build/test workflow.
-- Public GitHub Actions CI for formatting and macOS tests.
+- direct HLS endpoints discovered from official pages, official APIs, or
+  official-vendor player infrastructure;
+- official YouTube/link-out sources where direct stream reuse is not
+  appropriate;
+- one legacy DASH research candidate kept for provenance;
+- official pages used for source attribution and validation;
+- schedule/EPG scrape surfaces for CPAC, Quebec, Ontario, New Zealand, and
+  Brazil;
+- permission status, evidence links, and reuse recommendations for every
+  channel entry.
 
-## Screenshots
+This is not an endorsed global directory and not a rebroadcast service. Public
+availability does not automatically mean permission to redistribute, embed, or
+play a stream natively in another product.
 
-These screenshots show live public video sources as rendered by the app during development. The broadcast content and official marks belong to their respective sources.
+## Python Scrapers
 
-| macOS | tvOS |
-| --- | --- |
-| ![Parliaments running on macOS](docs/screenshots/macos.png) | ![Parliaments running on tvOS](docs/screenshots/tvos-apple-tv.png) |
+The scraper modules are small standard-library parsers. They are meant to
+document and reproduce the parsing logic that used to live in Swift schedule
+adapters.
 
-| iPhone | iPad |
-| --- | --- |
-| ![Parliaments running on iPhone](docs/screenshots/ios-iphone.jpg) | ![Parliaments running on iPad](docs/screenshots/ipados-ipad.jpg) |
+Current scraper ids:
 
-## Requirements
+- `cpac`
+- `quebec-webdiffusion`
+- `new-zealand-parliament`
+- `ontario-calendar`
+- `brazil-tv-camara`
 
-- macOS with Xcode installed.
-- Xcode's bundled `swift-format` available through `xcrun`.
-- Simulators matching the destinations in `Makefile` for the full local verification workflow.
-- The app currently uses a macOS 15.0 deployment target for CI compatibility; iOS/iPadOS/tvOS targets are still prototype-era Xcode 26 simulator targets.
+They parse supplied HTML/JSON strings. Network fetching is deliberately not
+hidden inside the parsers so validation runs can record exactly what was
+downloaded, when, and from which official endpoint.
 
-## Build and Verify
-
-Check formatting:
+Parse a saved response with the scraper CLI:
 
 ```sh
-make format-check
+python3 -m parliament_streams.scrapers cpac /path/to/cpac-schedule.html
 ```
 
-Format Swift sources:
+Quebec uses two official JSON endpoints, so pass the live response first and
+the upcoming response second:
 
 ```sh
-make format
+python3 -m parliament_streams.scrapers quebec-webdiffusion live.json upcoming.json
 ```
 
-Run macOS tests:
+The command prints parsed channel metadata as JSON. It does not fetch network
+resources itself.
 
-```sh
-make test
-```
+## Verify
 
-Run the full local verification pass:
+Run the local verification pass:
 
 ```sh
 make verify
 ```
 
-`make verify` runs whitespace checks, `swift-format` lint, macOS tests, iPhone simulator build, iPad simulator build, and tvOS simulator build.
+This runs JSON validation, Ruff linting, Python import/compile checks, and the
+unit tests.
 
-GitHub Actions currently runs a conservative public-repository CI baseline: whitespace checks, `swift-format` lint, and macOS tests. The full simulator build matrix remains a local `make verify` workflow until the CI environment and simulator destinations are stabilized.
+Format Python sources with:
 
-## Repository Layout
-
-```text
-App/                  SwiftUI app, models, catalogue, playback, schedule adapters
-Tests/                Unit tests for catalogue, schedule adapters, and metadata
-Scripts/verify.sh     Local verification workflow
-plan.md               Product and implementation plan
-research.md           Research log for stream and schedule feasibility
-TESTFLIGHT.md         TestFlight checklist, beta notes, and release metadata draft
-docs/                 Public notices and source/provenance notes
+```sh
+make format
 ```
 
-## Known Limitations
+## Rights And Reuse
 
-- Source URLs, stream availability, schedules, captions, and terms can drift.
-- Legal/source labels are conservative implementation notes, not legal advice.
-- Schedule coverage is uneven: some channels have now/next metadata, while others only expose signal state.
-- YouTube, DASH, and official web-player sources are second-class compared with native HLS playback.
-- The public CI workflow does not yet run the full iPhone, iPad, and tvOS simulator build matrix.
-- There are currently no accounts, analytics, iCloud sync, or server-side popularity features.
+The repository code and original documentation are covered by the repository
+license. External stream URLs, official pages, schedule data, video content,
+marks, watermarks, screenshots, and YouTube metadata belong to their respective
+sources and may be governed by separate terms.
 
-## Source and Rights Notes
+Before using a source outside research or advocacy:
 
-The code is licensed under the BSD 3-Clause license. Stream URLs, official pages, screenshots, preview captures, marks, and broadcast content are not owned by this project and may be subject to separate terms.
+1. Review its official page.
+2. Review its terms and attribution requirements.
+3. Prefer documented official embeds or APIs.
+4. Preserve visible attribution.
+5. Avoid implying endorsement.
+6. Seek written permission where the status is pending or ambiguous.
 
-See [docs/sources-and-provenance.md](docs/sources-and-provenance.md) before reusing catalogue entries, preview images, or design assets outside this prototype.
-
-See [PRIVACY.md](PRIVACY.md) for the current prototype privacy posture.
-
-See [SECURITY.md](SECURITY.md) for sensitive reporting guidance.
-
-## Research Log
-
-`research.md` is a working research log. It includes successful checks, failed checks, dead ends, candidate sources, and notes that may become stale. Treat it as evidence of exploration, not as an endorsed public stream directory.
-
-## Contributing
-
-Source corrections and playback fixes are welcome when they are backed by official source URLs and validation notes. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-Use GitHub issue templates for playback bugs, source corrections, schedule metadata issues, and UI/platform problems.
+See `docs/sources-and-provenance.md` and
+`docs/source-rights-and-permissions.md` for the current evidence.
 
 ## Why This Exists
 
-Public parliamentary video is often available, but not always in predictable, machine-readable, app-friendly forms. A polished viewer helps demonstrate the practical value of stable HLS feeds, documented embeds, schedule APIs, captions, audio language metadata, and clear terms of use.
+Public parliamentary video is often available, but not always in predictable,
+machine-readable, app-friendly forms. This project documents what was found and
+where openness could improve: stable HLS or documented embeds, JSON schedules,
+event IDs, now/next signals, timezone data, chamber labels, captions/audio
+metadata, plain-language terms, browser compatibility, and clear off-air
+signals.

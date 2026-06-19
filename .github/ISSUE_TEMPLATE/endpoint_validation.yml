@@ -1,0 +1,37 @@
+name: Endpoint validation issue
+description: Report a stream, player, official page, or endpoint validation problem.
+title: "[Endpoint]: "
+labels: ["endpoint", "validation"]
+body:
+  - type: input
+    id: channel
+    attributes:
+      label: Channel or source
+      description: Name the channel/source and include the catalogue id if known.
+      placeholder: cpac-ca
+    validations:
+      required: true
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint or official page URL
+      description: Include the HLS/DASH/embed/player/official page URL being checked.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include status code, content type, redirect behavior, error text, or observed player behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add validation command, date, region, headers used, or official source links if available.
+  - type: textarea
+    id: caveats
+    attributes:
+      label: Caveats
+      description: Note off-air timing, geofencing, sign-in prompts, temporary outages, or event-only availability.

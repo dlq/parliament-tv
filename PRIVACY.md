@@ -1,18 +1,20 @@
 # Privacy
 
-Parliaments is a local prototype viewer. It does not include accounts, analytics, advertising SDKs, telemetry SDKs, or push notifications.
+Parliaments is a documentation and data repository. It does not operate a
+hosted service, user account system, analytics pipeline, telemetry SDK, push
+notification system, or sync backend.
 
-The app makes network requests to:
+The tracked repository contains public source URLs, official page URLs,
+schedule/EPG endpoint notes, and research documentation. It should not contain
+private correspondence, credentials, secrets, API keys, or personal viewing
+history.
 
-- configured parliamentary stream URLs;
-- official source pages and schedule pages;
-- selected external web/player sources when the user opens them;
-- DASH player support scripts for the macOS DASH experiment.
+Future fetch or validation scripts may make network requests to official
+source pages, schedule pages, stream endpoints, YouTube pages, or streaming
+vendor infrastructure. Those services may have their own logging, cookies,
+tracking, geolocation rules, account prompts, or terms. They are not controlled
+by this project.
 
-External pages and video platforms may have their own logging, cookies, tracking, geolocation rules, or account prompts. Those services are not controlled by this project.
-
-Pinned channel preferences are stored locally with app preferences. No server-side account or sync layer is currently implemented.
-
-Future ideas such as CloudKit sync or opt-in aggregate popularity statistics are planning notes only. They are not implemented in the current app.
-
-This file is a development note, not an App Store privacy nutrition label.
+Permission requests and responses should be summarized as evidence in the
+rights matrix. Do not commit raw private emails unless all parties have agreed
+that publication is appropriate.

@@ -1,11 +1,11 @@
 # Parliamentary open-stream research
 
-This is a working research log, not an endorsed stream directory or legal assessment. It includes successful checks, failed checks, stale candidates, third-party references, and notes that require revalidation before reuse in a public catalogue, app release, or advocacy material.
+This is a working research log, not an endorsed stream directory or legal assessment. It includes successful checks, failed checks, stale candidates, third-party references, and notes that require revalidation before reuse in a public catalogue, downstream product, or advocacy material.
 
-Use this file as evidence and background. The live product roadmap, implementation status, and release checklist are maintained in `plan.md` and `TESTFLIGHT.md`.
+Use this file as evidence and background. The current catalogue lives in `data/channels.json`, the live project roadmap is `plan.md`, and source rights evidence is maintained in `docs/source-rights-and-permissions.md`.
 
 Date researched: 2026-05-12  
-Goal: determine whether an app can flip between publicly available, open streams of parliamentary activity around the world, with initial coverage across national, sub-national, and supra-national legislatures.
+Original goal: determine whether publicly available parliamentary video streams and schedule metadata could support a channel-style viewer. Current use: preserve the source discovery evidence behind the public catalogue.
 
 ## Bottom line
 
@@ -13,7 +13,7 @@ This is possible, but the first version should model sources as a mix of:
 
 1. Direct stream channels: browser-playable HLS/DASH URLs or stable iframes that can behave like TV channels.
 2. Official web-player channels: sources where the official page is public, but the stream URL is dynamic, embedded, protected by player logic, or not clearly licensed for direct reuse.
-3. External-platform channels: YouTube or app-store/mobile app routes that are public but less suitable for an integrated channel-flipping app unless embedded under that platform's rules.
+3. External-platform channels: YouTube or mobile-app routes that are public but less suitable for direct catalogue reuse unless linked or embedded under that platform's rules.
 
 The target list is realistic, but the "all public bodies expose a stable first-party HLS URL" assumption is only partly true. This pass validated 21 HLS endpoints from official pages/APIs or official vendor players:
 
@@ -125,7 +125,7 @@ Validation result:
 
 Assessment:
 
-CPAC is now a validated direct-HLS candidate, but the app should still discover it from CPAC's official content-store API rather than hard-coding the older `iptv-org` CloudFront URL.
+CPAC is a validated direct-HLS candidate, but the catalogue should prefer CPAC's official content-store API evidence rather than the older `iptv-org` CloudFront URL.
 
 Useful sources:
 
@@ -274,7 +274,7 @@ chunklist.m3u8
 
 Assessment:
 
-Feasible as direct HLS plus official activity metadata. The channel URLs look stable, but the app should use the official API to know which channels currently carry meaningful proceedings.
+Feasible as direct HLS plus official activity metadata. The channel URLs look stable, but catalogue consumers should use the official API to know which channels currently carry meaningful proceedings.
 
 Useful sources:
 
@@ -626,20 +626,20 @@ Engineering interpretation for this tier:
 
 - The flawed-democracy tier has more direct manifests than expected, but fewer clean first-party manifests than the raw count suggests.
 - YouTube and official-player fallback support is essential here. Without it, coverage drops sharply.
-- For an app, do not mix first-party parliamentary feeds, public-broadcaster relays, and third-party mirrors under one generic "stream" label. Store `source_owner` and `legal_review_status`.
+- Do not mix first-party parliamentary feeds, public-broadcaster relays, and third-party mirrors under one generic "stream" label. Store source ownership and rights-review status.
 - Several candidates are sitting-only. A validator should distinguish "404 because no sitting is active" from "broken URL"; this requires scheduled rechecks during known plenary hours.
 
-## Implementation implications
+## Catalogue implications
 
-The implementation roadmap, current app state, source model, UI plan, release plan, and future engineering work now live in `plan.md`. This research file intentionally keeps the evidence: source validation, schedule discovery, terms notes, comparable-app observations, and candidate-source research.
+The active catalogue roadmap now lives in `plan.md`. This research file intentionally keeps the evidence: source validation, schedule discovery, terms notes, comparable-product observations, and candidate-source research.
 
-Do not treat the older research findings below as the current implementation plan without checking `plan.md` and the code.
+Do not treat older research findings below as the current project plan without checking `plan.md`, `data/channels.json`, and `docs/source-rights-and-permissions.md`.
 
 ### Pre-implementation evidence retained
 
 Date of pass: 2026-05-12.
 
-This pass checked playback/CORS, terms, schedules, YouTube integration, and source-quality risks for the first likely app sources. The implementation recommendations have moved to `plan.md`; these notes remain as evidence.
+This pass checked playback/CORS, terms, schedules, YouTube integration, and source-quality risks for the first likely catalogue sources. The active recommendations have moved to `plan.md`; these notes remain as evidence.
 
 Playback/CORS probe:
 
@@ -647,7 +647,7 @@ Playback/CORS probe:
 - The probe checked HTTP status, content type, CORS headers, and playlist shape.
 - CPAC, Quebec, Ontario, New Zealand, Denmark, Netherlands, Portugal, Spain, Greece, Luxembourg, Mauritius, France, Italy, India, Brazil, Thailand, and Slovakia returned HTTP 200 HLS responses in that pass.
 - Most returned permissive `Access-Control-Allow-Origin` headers or reflected the test origin.
-- Real app playback still needs periodic revalidation because segment-level CORS, geo behavior, off-air states, and player compatibility can drift.
+- Stream validation still needs periodic rechecks because segment-level CORS, geo behavior, off-air states, and player compatibility can drift.
 
 Terms and reuse signals:
 
@@ -685,9 +685,9 @@ YouTube research model:
 - Expect ads, consent prompts, regional blocks, embedding restrictions, changing live IDs, and autoplay constraints.
 - Use `youtube-nocookie.com` where possible for privacy-enhanced embeds.
 
-### Comparable app and UI references
+### Historical comparable-product references
 
-This app should borrow from live-TV and IPTV apps more than from generic streaming catalogues.
+These notes were gathered during the earlier viewer prototype phase. They are retained because live-TV and IPTV products are useful references for schedule, source-quality, and channel metadata conventions, but they are not current implementation requirements.
 
 Closest direct references:
 
@@ -699,8 +699,8 @@ Closest direct references:
 
 Polished large-screen references:
 
-- [HBO Max](https://www.macrumors.com/2025/12/04/apple-announces-2025-app-store-awards/) won Apple TV App of the Year in the 2025 App Store Awards. Study accessibility, large-screen navigation, and content-detail polish rather than its catalogue/storefront model.
-- Apple's [tvOS 26 design direction](https://images.apple.com/uk/newsroom/2025/06/apple-tv-brings-a-beautiful-redesign-and-enhanced-home-entertainment-experience/) emphasizes keeping focus on what is playing with unobtrusive UI. That fits this app better than card-heavy browsing.
+- [HBO Max](https://www.macrumors.com/2025/12/04/apple-announces-2025-app-store-awards/) won Apple TV App of the Year in the 2025 App Store Awards. Its accessibility, large-screen navigation, and content-detail polish may still inform future catalogue presentation.
+- Apple's [tvOS 26 design direction](https://images.apple.com/uk/newsroom/2025/06/apple-tv-brings-a-beautiful-redesign-and-enhanced-home-entertainment-experience/) was relevant to the retired viewer prototype and is retained as historical context.
 - Netflix's Apple TV custom-player changes drew criticism because they removed familiar native tvOS affordances. The lesson is to stay close to AVPlayer/native tvOS playback behavior where possible.
 
 UI ideas to carry forward:
@@ -721,7 +721,7 @@ UI ideas to carry forward:
 - Inspect LCP / Assemblee nationale / Public Senat official player network calls for direct HLS and CORS behavior.
 - Determine whether Parliamentlive.tv/Red Bee and European Parliament/Watchity permit embedding outside their own pages or whether only deep-linking is appropriate.
 - Build a stream validator that periodically checks HTTP status, CORS headers, playlist shape, and browser playback success.
-- Review terms of use for each source before redistributing direct stream URLs in a public app.
+- Review terms of use for each source before redistributing direct stream URLs in any public product or derived catalogue.
 
 ## Non-US sub-national and additional supra-national discovery pass
 
@@ -752,7 +752,7 @@ Current `iptv-org` signal:
 | Ontario, Canada | Legislative Assembly of Ontario / Ontario Parliamentary Network | Validated HTTP 200 for official iSi HLS. | Strong local-priority exception; 6 known iSi HLS channels. |
 | Nunavut, Canada | Legislative Assembly TV Nunavut | HTTP 200 HLS via `temp2.isilive.ca`. | Useful Canadian territorial candidate. Needs official page/terms confirmation before app inclusion. |
 | British Columbia, Canada | Legislative Assembly of BC House and Committee A | Current `iptv-org` HLS candidates timed out during validation. | Official page confirms live webcasts, YouTube availability, weekly broadcast schedule, parliamentary calendar, committee calendar, captions, ASL streams, and archives. Strong official fallback even though direct HLS did not validate in this pass. |
-| Jalisco, Mexico | Canal Parlamento del Congreso de Jalisco | HTTP 200 HLS. | Direct HLS candidate from `iptv-org`; not a priority for Apple-first MVP, but proof that non-U.S. sub-national direct HLS exists outside Canada. |
+| Jalisco, Mexico | Canal Parlamento del Congreso de Jalisco | HTTP 200 HLS. | Direct HLS candidate from `iptv-org`; not a first-ring catalogue priority, but proof that non-U.S. sub-national direct HLS exists outside Canada. |
 | Colima, Mexico | ICRTV Colima | HTTP 200 HLS. | Legislative-adjacent/regional channel candidate from `iptv-org`; source quality needs review. |
 | Valencia, Spain | Corts Valencianes | Candidate timed out. | Official site prominently says live parliamentary activity can be followed and has agenda/calendar pages. `iptv-org` HLS did not validate in this pass. |
 | Andalucia, Spain | Parlamento de Andalucia | Candidate failed connection. | `iptv-org` raw IP/port candidate did not connect. Treat as official-page search target, not a direct candidate yet. |
@@ -850,4 +850,4 @@ Do not open a broad sub-national catalogue yet. A useful next step is a curated 
 4. Germany pilot: Baden-Wurttemberg and NRW for possible direct HLS extraction.
 5. Supra-national: PACE and Nordic Council as event-based official-player cards.
 
-For the Apple-first MVP, only direct HLS or AVPlayer-compatible streams should enter the main channel rail. Official-player-only sub-national/supra-national bodies should be metadata/link-out cards until an Apple-compatible playback path is validated.
+For the public catalogue, official-player-only sub-national/supra-national bodies should be represented as official-page or metadata-first entries until a direct stream path and reuse posture are validated.

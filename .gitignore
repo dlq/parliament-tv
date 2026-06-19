@@ -21,6 +21,13 @@ build/
 .build/
 .swiftpm/
 
+# Python local build/cache state
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
 # Local editor settings
 .vscode/
 .xcodebuildmcp/

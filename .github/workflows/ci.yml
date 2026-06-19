@@ -7,24 +7,21 @@ on:
   pull_request:
 
 jobs:
-  macos:
-    name: macOS format and tests
-    runs-on: macos-latest
+  verify:
+    name: Verify catalogue and scrapers
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Show toolchain
-        run: |
-          xcodebuild -version
-          xcrun swift-format --version
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Check whitespace
         run: git diff --check
 
-      - name: Check Swift formatting
-        run: make format-check
-
-      - name: Run macOS tests
-        run: make test XCODEBUILD_TEST_SETTINGS="CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="
+      - name: Verify catalogue and scrapers
+        run: make verify
