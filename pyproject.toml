@@ -1,10 +1,15 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "parliament-streams"
 version = "0.1.0"
 description = "Documentation, data, and source scrapers for public parliamentary stream research."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 
 [project.optional-dependencies]
 dev = ["ruff==0.15.18"]
@@ -19,3 +24,6 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.setuptools.packages.find]
+include = ["parliament_streams*"]
