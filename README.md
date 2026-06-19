@@ -76,6 +76,12 @@ resources itself.
 
 ## Verify
 
+Install the lightweight development tools first:
+
+```sh
+python3 -m pip install ".[dev]"
+```
+
 Run the local verification pass:
 
 ```sh

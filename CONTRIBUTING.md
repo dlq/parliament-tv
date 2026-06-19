@@ -29,6 +29,12 @@ official page, official API, official embed, or official streaming vendor path.
 Before opening a pull request, run:
 
 ```sh
+python3 -m pip install ".[dev]"
+```
+
+Then run:
+
+```sh
 make verify
 ```
 
